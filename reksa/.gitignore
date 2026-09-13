@@ -1,0 +1,10 @@
+node_modules/
+dist/
+artifacts/
+storage/
+playwright-report/
+test-results/
+.env
+.DS_Store
+eng.traineddata
+*.traineddata
