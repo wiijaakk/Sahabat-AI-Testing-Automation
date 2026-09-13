@@ -3,19 +3,22 @@ import { loadVocab, vocabByName } from "../../vocab/screens.ts";
 import { ArtifactSink } from "./artifacts.ts";
 import { drawBox } from "./draw-box.ts";
 import { shotHash } from "./hash.ts";
-import {
-  harvestTextLen,
-  looksGenerating,
-  matchEntry,
-  type Viewport,
-} from "./harvest.ts";
+import { composerActionButton, matchEntry, type Viewport } from "./harvest.ts";
 import { findPhrase, readShot, stopOcrWorker, type OcrPage } from "./ocr.ts";
+import {
+  buildReplyShot,
+  classifyReply,
+  replyTimeoutReason,
+  type ReplyPhase,
+  type ReplyShot,
+} from "./reply.ts";
 import type { BBox, HarvestNode, IndexedHit } from "./types.ts";
 import { locateWithGemini } from "./vision.ts";
 import { waitForFlutterPaint } from "./wait-flutter.ts";
 
 const BASE = process.env.SAHABAT_BASE_URL ?? "https://chat.sahabat-ai.com";
 const REPLY_MS = 60_000;
+const REPLY_IDLE_MS = 800;
 
 export class SahabatDriver {
   private hits = new Map<string, IndexedHit>();
@@ -24,6 +27,8 @@ export class SahabatDriver {
   private lastHash = "";
   private stale = true;
   private semanticsOn = false;
+  /** Screen right before Enter, so a fast reply still counts as a change. */
+  private preSend: ReplyShot | null = null;
 
   private constructor(
     readonly page: Page,
@@ -378,64 +383,72 @@ export class SahabatDriver {
     await this.page.waitForTimeout(300);
   }
 
-  async press(key: string) {
+  private async snapshotReply(): Promise<ReplyShot> {
     const png = await this.grabPng();
-    await this.artifacts.saveShot("press", key, png, true);
+    const nodes = await this.collectHarvest();
+    const view = this.viewport();
+    const action = composerActionButton(nodes, view);
+    return buildReplyShot(png, nodes, view, action?.bbox ?? null);
+  }
+
+  async press(key: string) {
+    // stash before the key so waitReply can see "before → after" even on a fast reply
+    this.preSend = await this.snapshotReply();
+    await this.artifacts.saveShot("press", key, this.preSend.png, true);
     await this.page.keyboard.press(key);
     this.stale = true;
-    await this.page.waitForTimeout(500);
+    await this.page.waitForTimeout(200);
   }
 
   async waitReply(timeoutMs = REPLY_MS) {
     const started = Date.now();
-    const startPng = await this.grabPng();
-    const startHash = shotHash(startPng);
-    await this.collectHarvest();
-    const startLen = harvestTextLen(this.harvest);
+    // degraded path if someone called waitReply without press()
+    const pre = this.preSend ?? (await this.snapshotReply());
+    this.preSend = null;
 
-    let sawGenerating = false;
-    let lastChange = Date.now();
-    let prevHash = startHash;
-    let prevLen = startLen;
-    let grew = false;
+    let lastPhase: ReplyPhase = "waiting";
+    let idleSince: number | null = null;
+    let lastPng = pre.png;
 
     while (Date.now() - started < timeoutMs) {
       await this.page.waitForTimeout(500);
-      const png = await this.grabPng();
-      const hash = shotHash(png);
-      const nodes = await this.collectHarvest();
-      const generating = looksGenerating(nodes);
-      const len = harvestTextLen(nodes);
-      if (generating) sawGenerating = true;
-      if (hash !== prevHash || len !== prevLen) {
-        lastChange = Date.now();
-        prevHash = hash;
-        prevLen = len;
+      const now = await this.snapshotReply();
+      lastPng = now.png;
+
+      const notPink = !now.actionPink;
+      if (notPink) {
+        if (idleSince === null) idleSince = Date.now();
+      } else {
+        idleSince = null;
       }
-      if (hash !== startHash || len > startLen + 8) grew = true;
+      const idleMs = idleSince === null ? 0 : Date.now() - idleSince;
+      const phase = classifyReply(pre, now, idleMs, REPLY_IDLE_MS);
+      lastPhase = phase;
 
-      const stable = Date.now() - lastChange > 1500;
-      const generatingGone = sawGenerating && !generating;
-      const fallbackDone = !sawGenerating && grew && stable && Date.now() - started > 3000;
-
-      if ((generatingGone && stable && grew) || fallbackDone) {
-        await this.artifacts.saveShot("wait-reply", "reply", png, true, `${Date.now() - started}ms`);
+      if (phase === "done") {
+        await this.artifacts.saveShot(
+          "wait-reply",
+          "reply",
+          now.png,
+          true,
+          `${Date.now() - started}ms`,
+        );
         this.stale = true;
-        this.lastHash = hash;
+        this.lastHash = shotHash(now.png);
         return;
       }
     }
 
-    const png = await this.grabPng();
+    const reason = replyTimeoutReason(lastPhase);
     await this.artifacts.saveShot(
       "wait-reply-fail",
       "reply",
-      png,
+      lastPng,
       false,
-      `no stable reply in ${timeoutMs}ms`,
+      `${reason} after ${timeoutMs}ms`,
     );
-    this.artifacts.finish("failed", "waitReply timed out");
-    throw new Error(`waitReply: nothing stable after ${timeoutMs}ms`);
+    this.artifacts.finish("failed", `waitReply timed out: ${reason}`);
+    throw new Error(`waitReply: ${reason} after ${timeoutMs}ms`);
   }
 
   async checkpoint(name: string) {

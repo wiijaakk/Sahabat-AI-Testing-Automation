@@ -45,6 +45,48 @@ export function inHint(node: HarvestNode, hint: ControlHint, viewport: Viewport)
   return true;
 }
 
+/** Most specific region for an unnamed icon. Sidebar wins over header so the collapse buttons stay together. */
+export function hintFor(node: HarvestNode, viewport: Viewport): ControlHint | undefined {
+  if (inHint(node, "sidebar", viewport)) return "sidebar";
+  if (inHint(node, "header", viewport)) return "header";
+  if (inHint(node, "footer", viewport)) return "footer";
+  if (inHint(node, "banner", viewport)) return "banner";
+  if (inHint(node, "composer", viewport)) return "composer";
+  return undefined;
+}
+
+function center(box: BBox) {
+  return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+}
+
+function dist(a: BBox, b: BBox): number {
+  const ac = center(a);
+  const bc = center(b);
+  return Math.hypot(ac.x - bc.x, ac.y - bc.y);
+}
+
+function sameRole(entry: VocabEntry, node: HarvestNode): boolean {
+  if (entry.role) return node.role === entry.role;
+  return node.role === "button" || node.role === "textbox";
+}
+
+/** Closest unnamed node to the box we saved when the human labeled it. */
+function matchUnnamedByBox(
+  entry: VocabEntry,
+  nodes: HarvestNode[],
+  viewport: Viewport,
+): HarvestNode | null {
+  const saved = entry.bbox;
+  if (!saved) return null;
+  let cands = nodes.filter((n) => n.unnamed && sameRole(entry, n));
+  if (entry.hint) cands = cands.filter((n) => inHint(n, entry.hint!, viewport));
+  if (cands.length === 0) return null;
+  cands.sort((a, b) => dist(a.bbox, saved) - dist(b.bbox, saved));
+  const best = cands[0];
+  if (dist(best.bbox, saved) > 96) return null;
+  return best;
+}
+
 function composerFields(nodes: HarvestNode[], viewport: Viewport): HarvestNode[] {
   return nodes.filter(
     (n) => n.role === "textbox" && !isGiant(n, viewport) && inHint(n, "composer", viewport),
@@ -95,6 +137,25 @@ function matchComposer(nodes: HarvestNode[], viewport: Viewport): HarvestNode | 
   return composerFromIcons(nodes, viewport);
 }
 
+/** Rightmost unnamed button on the composer row (send / stop / mic). */
+export function composerActionButton(
+  nodes: HarvestNode[],
+  viewport: Viewport,
+): HarvestNode | null {
+  const box = matchComposer(nodes, viewport);
+  if (!box) return null;
+  const cands = nodes.filter(
+    (n) =>
+      n.role === "button" &&
+      n.unnamed &&
+      overlapY(n, box, 48) &&
+      n.bbox.x > box.bbox.x + box.bbox.width * 0.4,
+  );
+  if (cands.length === 0) return null;
+  cands.sort((a, b) => b.bbox.x - a.bbox.x);
+  return cands[0];
+}
+
 /** Pick the one harvest node for a saved catalog entry, or null. Throws on duplicates. */
 export function matchEntry(
   entry: VocabEntry,
@@ -102,19 +163,10 @@ export function matchEntry(
   viewport: Viewport,
 ): HarvestNode | null {
   if (entry.unnamed) {
+    const byBox = matchUnnamedByBox(entry, nodes, viewport);
+    if (byBox) return byBox;
     if (entry.hint === "composer") {
-      const box = matchComposer(nodes, viewport);
-      if (!box) return null;
-      const cands = nodes.filter(
-        (n) =>
-          n.role === "button" &&
-          n.unnamed &&
-          overlapY(n, box, 48) &&
-          n.bbox.x > box.bbox.x + box.bbox.width * 0.4,
-      );
-      if (cands.length === 0) return null;
-      cands.sort((a, b) => b.bbox.x - a.bbox.x);
-      return cands[0];
+      return composerActionButton(nodes, viewport);
     }
     return null;
   }
@@ -133,15 +185,6 @@ export function matchEntry(
     );
   }
   return hits[0];
-}
-
-export function looksGenerating(nodes: HarvestNode[]): boolean {
-  return nodes.some((n) => /stop|generating|cancel/i.test(n.name));
-}
-
-/** Own text on leaf-ish nodes so we can tell the transcript grew. */
-export function harvestTextLen(nodes: HarvestNode[]): number {
-  return nodes.reduce((n, node) => n + node.name.length, 0);
 }
 
 export function nodeBbox(raw: {
