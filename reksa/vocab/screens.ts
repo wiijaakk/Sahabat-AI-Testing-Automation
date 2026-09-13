@@ -2,10 +2,11 @@ import type { VocabEntry } from "../src/framework/types";
 
 /** Names we own. The scanner only looks for these, never Flutter's rotating ids. */
 export const vocab: VocabEntry[] = [
-  { name: "Library", text: ["Library"], expectUrl: "**/mylibrary**" },
+  { name: "Library", text: ["Library"], expectPath: "mylibrary" },
   { name: "AI Creations", text: ["AI Creations", "Al Creations"] },
   { name: "Your Uploads", text: ["Your Uploads"] },
   { name: "New Chat", text: ["New Chat"] },
+  { name: "Skip", text: ["Skip"] },
   { name: "AIStorage", text: ["AIStorage", "AiStorage", "AI Storage"] },
   { name: "Help Center", text: ["Help Center"] },
   { name: "Search chats", text: ["Search chats"] },

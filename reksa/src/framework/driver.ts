@@ -132,15 +132,46 @@ export class SahabatDriver {
 
     const x = hit.bbox.x + hit.bbox.width / 2;
     const y = hit.bbox.y + hit.bbox.height / 2;
+    const before = await this.grabPng();
+    await this.artifacts.saveShot("tap", name, drawBox(before, hit.bbox, true), true, `${Math.round(x)},${Math.round(y)} via ${hit.via}`);
+
     await this.page.mouse.click(x, y);
     this.stale = true;
 
-    if (entry.expectUrl) {
-      await this.page.waitForURL(entry.expectUrl, { timeout: 20_000 });
+    if (entry.expectPath) {
+      try {
+        await this.page.waitForFunction(
+          (part: string) => window.location.pathname.toLowerCase().includes(part),
+          entry.expectPath,
+          { timeout: 15_000 },
+        );
+      } catch {
+        const png = await this.grabPng();
+        await this.artifacts.saveShot(
+          "tap-fail",
+          name,
+          drawBox(png, hit.bbox, false),
+          false,
+          `still at ${this.page.url()}, wanted ${entry.expectPath}`,
+        );
+        this.artifacts.finish("failed", `tap("${name}") stayed on ${this.page.url()}`);
+        throw new Error(`tap("${name}"): still at ${this.page.url()}`);
+      }
       await this.waitForFlutter();
     } else {
       await this.page.waitForTimeout(800);
     }
+  }
+
+  async dismissIfPresent(name: string) {
+    this.stale = true;
+    const hit = (await this.scan()).get(name);
+    if (!hit) return;
+    const x = hit.bbox.x + hit.bbox.width / 2;
+    const y = hit.bbox.y + hit.bbox.height / 2;
+    await this.page.mouse.click(x, y);
+    this.stale = true;
+    await this.page.waitForTimeout(600);
   }
 
   async see(name: string) {

@@ -16,11 +16,11 @@ export type VocabEntry = {
   name: string;
   /** Strings we try to read off the screenshot. */
   text: string[];
-  /** If set, tap() waits for this URL glob after clicking. */
-  expectUrl?: string;
+  /** Path snippet to wait for after tap, e.g. mylibrary. Flutter often skips a real load event. */
+  expectPath?: string;
 };
 
-export type EvidenceKind = "see" | "see-fail" | "tap-fail" | "end" | "checkpoint" | "login";
+export type EvidenceKind = "see" | "see-fail" | "tap" | "tap-fail" | "end" | "checkpoint" | "login";
 
 export type EvidenceStep = {
   kind: EvidenceKind;

@@ -20,20 +20,19 @@ export const test = base.extend<Fixtures>({
     const page = await firstPage(context);
     await use(page);
   },
-  sahabat: async ({ page }, use, info) => {
-    const driver = await SahabatDriver.create(page, info.title);
+  sahabat: async ({ page }, use, testInfo) => {
+    const driver = await SahabatDriver.create(page, testInfo.title);
+    await use(driver);
     try {
-      await use(driver);
-      if (driver.artifacts.manifest.status === "running") {
-        await driver.end(true);
+      const passed = testInfo.status === "passed";
+      const last = driver.artifacts.manifest.steps.at(-1);
+      if (last?.kind !== "end") {
+        await driver.end(passed, passed ? undefined : testInfo.error?.message);
+      } else if (!passed) {
+        driver.artifacts.finish("failed", testInfo.error?.message);
       }
-    } catch (err) {
-      try {
-        await driver.end(false, String(err));
-      } catch {
-        // already failed taking the last shot, don't hide the real error
-      }
-      throw err;
+    } catch {
+      // last shot failed, don't hide the original test error
     } finally {
       await driver.close();
     }

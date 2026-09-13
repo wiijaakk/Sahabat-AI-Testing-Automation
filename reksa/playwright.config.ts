@@ -36,5 +36,9 @@ export default defineConfig({
       testMatch: /canvas\..*\.spec\.ts/,
       use: { ...devices["Desktop Chrome"] },
     },
+    {
+      name: "unit",
+      testMatch: /.*\.unit\.spec\.ts/,
+    },
   ],
 });

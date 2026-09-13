@@ -96,29 +96,20 @@ export function fold(s: string): string {
 export function findPhrase(page: OcrPage, phrase: string): BBox | null {
   const needle = phrase.trim().split(/\s+/).filter(Boolean);
   if (needle.length === 0) return null;
+  const want = fold(phrase);
 
-  const foldedHay = fold(page.text);
-  if (!foldedHay.includes(fold(phrase))) {
-    // tesseract sometimes eats spaces but the words array still has them
-    const joinedWords = fold(page.words.map((w) => w.text).join(""));
-    if (!joinedWords.includes(fold(phrase))) return null;
-  }
-
+  let best: { box: BBox; n: number } | null = null;
   for (let i = 0; i < page.words.length; i++) {
-    const chunk: OcrWord[] = [];
-    let built = "";
-    for (let j = i; j < page.words.length && chunk.length < needle.length + 3; j++) {
-      chunk.push(page.words[j]);
-      built = chunk.map((w) => w.text).join(" ");
-      if (fold(built) === fold(phrase) || fold(built).includes(fold(phrase))) {
-        return mergeBoxes(chunk.map((w) => w.bbox));
-      }
+    // keep the window tiny so we don't merge New Chat..Library into one giant click target
+    const maxLen = Math.max(needle.length + 1, 2);
+    for (let len = 1; len <= maxLen && i + len <= page.words.length; len++) {
+      const chunk = page.words.slice(i, i + len);
+      if (fold(chunk.map((w) => w.text).join(" ")) !== want) continue;
+      const box = mergeBoxes(chunk.map((w) => w.bbox));
+      if (!best || len < best.n) best = { box, n: len };
     }
   }
-
-  const first = fold(needle[0]);
-  const loose = page.words.find((w) => fold(w.text).includes(first));
-  return loose ? loose.bbox : null;
+  return best?.box ?? null;
 }
 
 function mergeBoxes(boxes: BBox[]): BBox {
