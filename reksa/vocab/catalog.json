@@ -1,0 +1,76 @@
+[
+  {
+    "name": "Library",
+    "text": ["Library"],
+    "role": "button",
+    "hint": "sidebar",
+    "expectPath": "mylibrary"
+  },
+  {
+    "name": "AI Creations",
+    "text": ["AI Creations", "Al Creations"],
+    "role": "button"
+  },
+  {
+    "name": "Your Uploads",
+    "text": ["Your Uploads"],
+    "role": "button"
+  },
+  {
+    "name": "New Chat",
+    "text": ["New Chat"],
+    "role": "button",
+    "hint": "sidebar"
+  },
+  {
+    "name": "Skip",
+    "text": ["Skip"],
+    "role": "button"
+  },
+  {
+    "name": "AIStorage",
+    "text": ["AIStorage", "AiStorage", "AI Storage"],
+    "role": "button",
+    "hint": "sidebar"
+  },
+  {
+    "name": "Help Center",
+    "text": ["Help Center"],
+    "role": "button",
+    "hint": "sidebar"
+  },
+  {
+    "name": "Search chats",
+    "text": ["Search chats"],
+    "role": "button"
+  },
+  {
+    "name": "Go Pro",
+    "text": ["Go Pro"],
+    "role": "button"
+  },
+  {
+    "name": "Create New",
+    "text": ["Create New"],
+    "role": "button"
+  },
+  {
+    "name": "Login",
+    "text": ["Login"],
+    "role": "button",
+    "hint": "header"
+  },
+  {
+    "name": "composer",
+    "text": ["composer"],
+    "role": "textbox",
+    "hint": "composer"
+  },
+  {
+    "name": "send",
+    "text": ["send"],
+    "role": "button",
+    "unnamed": true,
+    "hint": "composer"
+  }
+]

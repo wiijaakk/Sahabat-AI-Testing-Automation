@@ -8,19 +8,70 @@ export type BBox = {
 export type IndexedHit = {
   name: string;
   bbox: BBox;
-  via: "ocr" | "vision";
+  via: "a11y" | "ocr" | "vision";
   text?: string;
 };
 
+export type ControlRole = "button" | "textbox" | "group";
+export type ControlHint = "header" | "sidebar" | "banner" | "composer" | "footer";
+
 export type VocabEntry = {
   name: string;
-  /** Strings we try to read off the screenshot. */
+  /** Aliases. a11y matches these to the node name. OCR uses them when the node has no name. */
   text: string[];
   /** Path snippet to wait for after tap, e.g. mylibrary. Flutter often skips a real load event. */
   expectPath?: string;
+  role?: ControlRole;
+  /** Icon with no accessible name. Scan will not match it by label. */
+  unnamed?: boolean;
+  /** Breaks ties when two Logins are on screen. */
+  hint?: ControlHint;
 };
 
-export type EvidenceKind = "see" | "see-fail" | "tap" | "tap-fail" | "end" | "checkpoint" | "login";
+export type HarvestNode = {
+  id: string;
+  role: string | null;
+  name: string;
+  unnamed: boolean;
+  bbox: BBox;
+};
+
+export type CaseAction =
+  | "gotoDashboard"
+  | "tap"
+  | "see"
+  | "dismiss"
+  | "checkpoint"
+  | "type"
+  | "press"
+  | "waitReply";
+
+export type CaseStep = {
+  action: CaseAction;
+  target?: string;
+  text?: string;
+  key?: string;
+};
+
+export type TestCase = {
+  id: string;
+  title: string;
+  steps: CaseStep[];
+};
+
+export type EvidenceKind =
+  | "see"
+  | "see-fail"
+  | "tap"
+  | "tap-fail"
+  | "type"
+  | "press"
+  | "wait-reply"
+  | "wait-reply-fail"
+  | "end"
+  | "checkpoint"
+  | "login"
+  | "scan";
 
 export type EvidenceStep = {
   kind: EvidenceKind;

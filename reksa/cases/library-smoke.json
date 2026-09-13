@@ -1,0 +1,10 @@
+{
+  "id": "library-smoke",
+  "title": "dashboard opens Library",
+  "steps": [
+    { "action": "gotoDashboard" },
+    { "action": "dismiss", "target": "Skip" },
+    { "action": "tap", "target": "Library" },
+    { "action": "see", "target": "AI Creations" }
+  ]
+}

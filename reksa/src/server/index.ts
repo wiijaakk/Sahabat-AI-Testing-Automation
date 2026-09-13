@@ -4,15 +4,21 @@ import fs from "node:fs";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { deleteCase, HARVEST_FILE, listCases, loadCase, saveCase } from "../framework/cases.ts";
 import { profileExists } from "../framework/profile.ts";
+import type { VocabEntry } from "../framework/types.ts";
+import { loadVocab, saveVocab } from "../../vocab/screens.ts";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const runsDir = path.join(root, "artifacts", "runs");
 const port = Number(process.env.OPERATOR_PORT ?? 8787);
 
+type JobKind = "login" | "smoke" | "scan" | "case";
+
 type Job = {
   id: string;
-  kind: "login" | "smoke";
+  kind: JobKind;
+  caseId?: string;
   status: "running" | "passed" | "failed";
   startedAt: string;
   finishedAt?: string;
@@ -44,7 +50,7 @@ function stamp(): string {
   return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
 }
 
-function runPlaywright(kind: "login" | "smoke"): Job {
+function spawnJob(kind: JobKind, args: string[], caseId?: string): Job {
   if (current?.status === "running") {
     throw new Error("A run is already in progress");
   }
@@ -55,6 +61,7 @@ function runPlaywright(kind: "login" | "smoke"): Job {
   const job: Job = {
     id,
     kind,
+    caseId,
     status: "running",
     startedAt: new Date().toISOString(),
     log: "",
@@ -63,17 +70,13 @@ function runPlaywright(kind: "login" | "smoke"): Job {
   jobs.set(id, job);
   current = job;
 
-  const args =
-    kind === "login"
-      ? ["playwright", "test", "tests/login.setup.ts", "--headed", "--project=setup"]
-      : ["playwright", "test", "tests/smoke.library.spec.ts", "--headed", "--project=smoke"];
-
   const child = spawn("npx", args, {
     cwd: root,
     env: {
       ...process.env,
       SAHABAT_RUN_ID: id,
       SAHABAT_RUN_DIR: runDir,
+      SAHABAT_CASE_ID: caseId ?? "",
     },
   });
 
@@ -93,7 +96,7 @@ function runPlaywright(kind: "login" | "smoke"): Job {
 }
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: "1mb" }));
 app.use("/artifacts", express.static(path.join(root, "artifacts")));
 
 app.get("/api/status", (_req, res) => {
@@ -129,9 +132,68 @@ app.get("/api/runs/:id", (req, res) => {
   res.json({ job: jobs.get(req.params.id) ?? null, manifest, shots });
 });
 
+app.get("/api/catalog", (_req, res) => {
+  res.json({ entries: loadVocab() });
+});
+
+app.put("/api/catalog", (req, res) => {
+  const entries = req.body?.entries as VocabEntry[] | undefined;
+  if (!Array.isArray(entries)) {
+    res.status(400).json({ error: "entries array required" });
+    return;
+  }
+  for (const e of entries) {
+    if (!e?.name || !Array.isArray(e.text)) {
+      res.status(400).json({ error: "each entry needs name + text[]" });
+      return;
+    }
+  }
+  saveVocab(entries);
+  res.json({ entries: loadVocab() });
+});
+
+app.get("/api/harvest", (_req, res) => {
+  if (!fs.existsSync(HARVEST_FILE)) {
+    res.json({ harvest: null });
+    return;
+  }
+  res.json({ harvest: JSON.parse(fs.readFileSync(HARVEST_FILE, "utf8")) });
+});
+
+app.get("/api/cases", (_req, res) => {
+  res.json({ cases: listCases() });
+});
+
+app.get("/api/cases/:id", (req, res) => {
+  try {
+    res.json({ case: loadCase(req.params.id) });
+  } catch (err) {
+    res.status(404).json({ error: String(err) });
+  }
+});
+
+app.put("/api/cases/:id", (req, res) => {
+  try {
+    const body = req.body as { title?: string; steps?: unknown };
+    const next = saveCase({
+      id: req.params.id,
+      title: body.title ?? req.params.id,
+      steps: Array.isArray(body.steps) ? body.steps : [],
+    });
+    res.json({ case: next });
+  } catch (err) {
+    res.status(400).json({ error: String(err) });
+  }
+});
+
+app.delete("/api/cases/:id", (req, res) => {
+  deleteCase(req.params.id);
+  res.json({ ok: true });
+});
+
 app.post("/api/login", (_req, res) => {
   try {
-    const job = runPlaywright("login");
+    const job = spawnJob("login", ["playwright", "test", "tests/login.setup.ts", "--headed", "--project=setup"]);
     res.json(job);
   } catch (err) {
     res.status(409).json({ error: String(err) });
@@ -144,10 +206,40 @@ app.post("/api/run", (_req, res) => {
       res.status(400).json({ error: "No Chrome profile yet. Click Save login first." });
       return;
     }
-    const job = runPlaywright("smoke");
+    const job = spawnJob("smoke", [
+      "playwright",
+      "test",
+      "tests/smoke.library.spec.ts",
+      "--headed",
+      "--project=smoke",
+    ]);
     res.json(job);
   } catch (err) {
     res.status(409).json({ error: String(err) });
+  }
+});
+
+app.post("/api/scan", (_req, res) => {
+  try {
+    const job = spawnJob("scan", ["tsx", "src/runner/scan.ts"]);
+    res.json(job);
+  } catch (err) {
+    res.status(409).json({ error: String(err) });
+  }
+});
+
+app.post("/api/run-case/:id", (req, res) => {
+  try {
+    if (!profileExists()) {
+      res.status(400).json({ error: "No Chrome profile yet. Click Save login first." });
+      return;
+    }
+    loadCase(req.params.id);
+    const job = spawnJob("case", ["tsx", "src/runner/run-case.ts", req.params.id], req.params.id);
+    res.json(job);
+  } catch (err) {
+    const msg = String(err);
+    res.status(msg.includes("already") ? 409 : 404).json({ error: msg });
   }
 });
 

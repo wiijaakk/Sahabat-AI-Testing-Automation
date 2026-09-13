@@ -1,23 +1,24 @@
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import type { VocabEntry } from "../src/framework/types";
 
-/** Names we own. The scanner only looks for these, never Flutter's rotating ids. */
-export const vocab: VocabEntry[] = [
-  { name: "Library", text: ["Library"], expectPath: "mylibrary" },
-  { name: "AI Creations", text: ["AI Creations", "Al Creations"] },
-  { name: "Your Uploads", text: ["Your Uploads"] },
-  { name: "New Chat", text: ["New Chat"] },
-  { name: "Skip", text: ["Skip"] },
-  { name: "AIStorage", text: ["AIStorage", "AiStorage", "AI Storage"] },
-  { name: "Help Center", text: ["Help Center"] },
-  { name: "Search chats", text: ["Search chats"] },
-  { name: "Go Pro", text: ["Go Pro"] },
-  { name: "Create New", text: ["Create New"] },
-];
+const catalogFile = path.join(path.dirname(fileURLToPath(import.meta.url)), "catalog.json");
+
+export function loadVocab(): VocabEntry[] {
+  return JSON.parse(fs.readFileSync(catalogFile, "utf8")) as VocabEntry[];
+}
+
+export function saveVocab(entries: VocabEntry[]) {
+  fs.writeFileSync(catalogFile, JSON.stringify(entries, null, 2) + "\n");
+}
+
+export const vocab: VocabEntry[] = loadVocab();
 
 export function vocabByName(name: string): VocabEntry {
-  const hit = vocab.find((v) => v.name.toLowerCase() === name.toLowerCase());
+  const hit = loadVocab().find((v) => v.name.toLowerCase() === name.toLowerCase());
   if (!hit) {
-    throw new Error(`"${name}" is not in the vocabulary. Add it in vocab/screens.ts`);
+    throw new Error(`"${name}" is not in the vocabulary. Add it in the Catalog tab.`);
   }
   return hit;
 }

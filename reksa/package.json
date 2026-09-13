@@ -9,6 +9,8 @@
     "test:smoke": "playwright test tests/smoke.library.spec.ts --headed --project=smoke",
     "test:ocr": "playwright test tests/canvas.ocr.spec.ts --headed --project=canvas",
     "test:unit": "playwright test --project=unit",
+    "scan": "tsx src/runner/scan.ts",
+    "case": "tsx src/runner/run-case.ts",
     "server": "tsx src/server/index.ts",
     "ui": "vite",
     "dev": "concurrently -k -n server,ui -c magenta,cyan \"npm run server\" \"npm run ui\"",
