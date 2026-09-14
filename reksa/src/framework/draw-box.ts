@@ -30,10 +30,7 @@ function vline(png: PNG, y0: number, y1: number, x: number, color: [number, numb
   }
 }
 
-/** Draw a fat magenta box so the gallery is actually readable. */
-export function drawBox(png: Buffer, box: BBox, ok: boolean): Buffer {
-  const img = parse(png);
-  const color: [number, number, number] = ok ? [226, 0, 116] : [180, 32, 32];
+function stroke(img: PNG, box: BBox, color: [number, number, number]) {
   const x0 = Math.round(box.x);
   const y0 = Math.round(box.y);
   const x1 = Math.round(box.x + box.width);
@@ -42,5 +39,44 @@ export function drawBox(png: Buffer, box: BBox, ok: boolean): Buffer {
   hline(img, x0, x1, y1, color);
   vline(img, y0, y1, x0, color);
   vline(img, y0, y1, x1, color);
+}
+
+/** Draw a fat magenta box so the gallery is actually readable. */
+export function drawBox(png: Buffer, box: BBox, ok: boolean): Buffer {
+  return drawBoxes(png, [box], ok);
+}
+
+export function drawBoxes(png: Buffer, boxes: BBox[], ok: boolean): Buffer {
+  const img = parse(png);
+  const color: [number, number, number] = ok ? [226, 0, 116] : [180, 32, 32];
+  for (const box of boxes) stroke(img, box, color);
   return Buffer.from(PNG.sync.write(img));
+}
+
+/** Grab the control plus a bit of neighbor chrome so you can tell what it is. */
+export function cropBox(png: Buffer, box: BBox, pad = 56): { png: Buffer; origin: { x: number; y: number } } {
+  const img = parse(png);
+  const x0 = Math.max(0, Math.floor(box.x - pad));
+  const y0 = Math.max(0, Math.floor(box.y - pad));
+  const x1 = Math.min(img.width, Math.ceil(box.x + box.width + pad));
+  const y1 = Math.min(img.height, Math.ceil(box.y + box.height + pad));
+  const width = Math.max(1, x1 - x0);
+  const height = Math.max(1, y1 - y0);
+  const out = new PNG({ width, height });
+  PNG.bitblt(img, out, x0, y0, width, height, 0, 0);
+  return { png: Buffer.from(PNG.sync.write(out)), origin: { x: x0, y: y0 } };
+}
+
+export function cropMarked(png: Buffer, box: BBox, pad = 56): Buffer {
+  const cut = cropBox(png, box, pad);
+  return drawBox(
+    cut.png,
+    {
+      x: box.x - cut.origin.x,
+      y: box.y - cut.origin.y,
+      width: box.width,
+      height: box.height,
+    },
+    true,
+  );
 }

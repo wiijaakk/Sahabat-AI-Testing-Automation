@@ -5,6 +5,7 @@ import type { TestCase } from "./types.ts";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 export const CASES_DIR = path.join(root, "cases");
+export const HARVEST_DIR = path.join(root, "artifacts", "harvest");
 export const HARVEST_FILE = path.join(root, "artifacts", "harvest.json");
 
 export function listCases(): TestCase[] {

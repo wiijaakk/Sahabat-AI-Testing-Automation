@@ -26,6 +26,8 @@ export type VocabEntry = {
   unnamed?: boolean;
   /** Breaks ties when two Logins are on screen. */
   hint?: ControlHint;
+  /** Last scan box. Lets us re-find unnamed icons without calling vision every tap. */
+  bbox?: BBox;
 };
 
 export type HarvestNode = {
@@ -34,6 +36,19 @@ export type HarvestNode = {
   name: string;
   unnamed: boolean;
   bbox: BBox;
+  /** Region guess from the box. Only on the harvest dump, not live tree. */
+  hint?: ControlHint;
+  /** Crop file under artifacts/harvest/, unnamed controls only. */
+  crop?: string;
+};
+
+export type HarvestDump = {
+  at: string;
+  url: string;
+  viewport: { width: number; height: number };
+  screen?: string;
+  overview?: string;
+  nodes: HarvestNode[];
 };
 
 export type CaseAction =

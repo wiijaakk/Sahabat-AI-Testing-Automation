@@ -4,9 +4,12 @@ import fs from "node:fs";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { displayRunName, formatRunWhen, makeRunId } from "../framework/artifacts.ts";
 import { deleteCase, HARVEST_FILE, listCases, loadCase, saveCase } from "../framework/cases.ts";
 import { profileExists } from "../framework/profile.ts";
-import type { VocabEntry } from "../framework/types.ts";
+import type { HarvestDump, VocabEntry } from "../framework/types.ts";
+import { harvestAssetPath } from "../framework/harvest-shots.ts";
+import { guessUnnamedIcons } from "../framework/vision.ts";
 import { loadVocab, saveVocab } from "../../vocab/screens.ts";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -36,25 +39,31 @@ function listRuns() {
     .map((id) => {
       const dir = path.join(runsDir, id);
       const manifestPath = path.join(dir, "manifest.json");
-      if (!fs.existsSync(manifestPath)) {
-        return { id, dir, manifest: null as null };
-      }
-      return { id, dir, manifest: JSON.parse(fs.readFileSync(manifestPath, "utf8")) };
+      const job = jobs.get(id);
+      const manifest = fs.existsSync(manifestPath)
+        ? JSON.parse(fs.readFileSync(manifestPath, "utf8"))
+        : null;
+      return {
+        id,
+        dir,
+        name: displayRunName({
+          id,
+          test: manifest?.test,
+          kind: job?.kind,
+          caseId: job?.caseId,
+        }),
+        when: formatRunWhen(id) ?? manifest?.startedAt ?? "",
+        manifest,
+      };
     })
     .sort((a, b) => b.id.localeCompare(a.id));
-}
-
-function stamp(): string {
-  const d = new Date();
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
 }
 
 function spawnJob(kind: JobKind, args: string[], caseId?: string): Job {
   if (current?.status === "running") {
     throw new Error("A run is already in progress");
   }
-  const id = stamp();
+  const id = makeRunId(caseId ?? kind);
   const runDir = path.join(runsDir, id);
   fs.mkdirSync(runDir, { recursive: true });
 
@@ -102,6 +111,7 @@ app.use("/artifacts", express.static(path.join(root, "artifacts")));
 app.get("/api/status", (_req, res) => {
   res.json({
     profile: profileExists(),
+    vision: Boolean(process.env.GEMINI_API_KEY),
     current,
     lastRuns: listRuns().slice(0, 10),
   });
@@ -158,6 +168,46 @@ app.get("/api/harvest", (_req, res) => {
     return;
   }
   res.json({ harvest: JSON.parse(fs.readFileSync(HARVEST_FILE, "utf8")) });
+});
+
+app.post("/api/vision/guess-unnamed", async (req, res) => {
+  try {
+    if (!process.env.GEMINI_API_KEY) {
+      res.status(400).json({ error: "GEMINI_API_KEY is empty. Set it in reksa/.env" });
+      return;
+    }
+    if (!fs.existsSync(HARVEST_FILE)) {
+      res.status(404).json({ error: "Scan the screen first." });
+      return;
+    }
+    const harvest = JSON.parse(fs.readFileSync(HARVEST_FILE, "utf8")) as HarvestDump;
+    const nodeId = typeof req.body?.nodeId === "string" ? req.body.nodeId : "";
+    let targets = harvest.nodes.filter((n) => n.unnamed && n.crop);
+    if (nodeId) targets = targets.filter((n) => n.id === nodeId);
+    if (targets.length === 0) {
+      res.status(400).json({ error: "No unnamed crops to guess. Scan again." });
+      return;
+    }
+    const items = [];
+    for (const n of targets) {
+      const file = harvestAssetPath(n.crop!);
+      if (!fs.existsSync(file)) continue;
+      items.push({
+        id: n.id,
+        png: fs.readFileSync(file),
+        hint: n.hint,
+        role: n.role,
+      });
+    }
+    if (items.length === 0) {
+      res.status(400).json({ error: "Crop files missing. Scan again." });
+      return;
+    }
+    const guesses = await guessUnnamedIcons(items);
+    res.json({ guesses });
+  } catch (err) {
+    res.status(500).json({ error: String(err) });
+  }
 });
 
 app.get("/api/cases", (_req, res) => {

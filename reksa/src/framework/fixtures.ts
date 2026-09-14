@@ -1,4 +1,5 @@
 import { test as base, type Browser } from "@playwright/test";
+import { makeRunId } from "./artifacts.ts";
 import { SahabatDriver } from "./driver.ts";
 import { firstPage, openPersistentContext } from "./profile.ts";
 
@@ -21,6 +22,11 @@ export const test = base.extend<Fixtures>({
     await use(page);
   },
   sahabat: async ({ page }, use, testInfo) => {
+    if (!process.env.SAHABAT_RUN_DIR) {
+      const action =
+        testInfo.project.name === "setup" ? "login" : testInfo.project.name === "smoke" ? "smoke" : testInfo.title;
+      process.env.SAHABAT_RUN_ID = makeRunId(action);
+    }
     const driver = await SahabatDriver.create(page, testInfo.title);
     await use(driver);
     try {

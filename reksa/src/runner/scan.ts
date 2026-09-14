@@ -1,9 +1,12 @@
 import "dotenv/config";
-import fs from "node:fs";
-import path from "node:path";
+import { makeRunId } from "../framework/artifacts.ts";
 import { SahabatDriver } from "../framework/driver.ts";
-import { HARVEST_FILE } from "../framework/cases.ts";
+import { writeHarvestBundle } from "../framework/harvest-shots.ts";
 import { firstPage, openPersistentContext } from "../framework/profile.ts";
+
+if (!process.env.SAHABAT_RUN_ID) {
+  process.env.SAHABAT_RUN_ID = makeRunId("scan");
+}
 
 const context = await openPersistentContext();
 const page = await firstPage(context);
@@ -14,21 +17,21 @@ try {
   await sahabat.dismissIfPresent("Skip");
   await sahabat.scan();
   const nodes = sahabat.lastHarvest();
-  fs.mkdirSync(path.dirname(HARVEST_FILE), { recursive: true });
-  fs.writeFileSync(
-    HARVEST_FILE,
-    JSON.stringify(
-      {
-        at: new Date().toISOString(),
-        url: page.url(),
-        nodes,
-      },
-      null,
-      2,
-    ) + "\n",
-  );
   const png = await page.screenshot({ type: "png", scale: "css" });
-  await sahabat.artifacts.saveShot("scan", "screen", png, true, `${nodes.length} controls`);
+  writeHarvestBundle({
+    png,
+    nodes,
+    url: page.url(),
+    viewport: page.viewportSize() ?? { width: 1440, height: 900 },
+  });
+  const unnamed = nodes.filter((n) => n.unnamed).length;
+  await sahabat.artifacts.saveShot(
+    "scan",
+    "screen",
+    png,
+    true,
+    `${nodes.length} controls, ${unnamed} unnamed`,
+  );
   await sahabat.end(true);
 } catch (err) {
   await sahabat.end(false, String(err));

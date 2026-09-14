@@ -1,76 +1,174 @@
 [
   {
     "name": "Library",
-    "text": ["Library"],
+    "text": [
+      "Library"
+    ],
     "role": "button",
     "hint": "sidebar",
     "expectPath": "mylibrary"
   },
   {
     "name": "AI Creations",
-    "text": ["AI Creations", "Al Creations"],
+    "text": [
+      "AI Creations",
+      "Al Creations"
+    ],
     "role": "button"
   },
   {
     "name": "Your Uploads",
-    "text": ["Your Uploads"],
+    "text": [
+      "Your Uploads"
+    ],
     "role": "button"
   },
   {
     "name": "New Chat",
-    "text": ["New Chat"],
+    "text": [
+      "New Chat"
+    ],
     "role": "button",
     "hint": "sidebar"
   },
   {
     "name": "Skip",
-    "text": ["Skip"],
+    "text": [
+      "Skip"
+    ],
     "role": "button"
   },
   {
     "name": "AIStorage",
-    "text": ["AIStorage", "AiStorage", "AI Storage"],
+    "text": [
+      "AIStorage",
+      "AiStorage",
+      "AI Storage"
+    ],
     "role": "button",
     "hint": "sidebar"
   },
   {
     "name": "Help Center",
-    "text": ["Help Center"],
+    "text": [
+      "Help Center"
+    ],
     "role": "button",
     "hint": "sidebar"
   },
   {
     "name": "Search chats",
-    "text": ["Search chats"],
+    "text": [
+      "Search chats"
+    ],
     "role": "button"
   },
   {
     "name": "Go Pro",
-    "text": ["Go Pro"],
+    "text": [
+      "Go Pro"
+    ],
     "role": "button"
   },
   {
     "name": "Create New",
-    "text": ["Create New"],
+    "text": [
+      "Create New"
+    ],
     "role": "button"
   },
   {
     "name": "Login",
-    "text": ["Login"],
+    "text": [
+      "Login"
+    ],
     "role": "button",
     "hint": "header"
   },
   {
     "name": "composer",
-    "text": ["composer"],
+    "text": [
+      "composer"
+    ],
     "role": "textbox",
     "hint": "composer"
   },
   {
     "name": "send",
-    "text": ["send"],
+    "text": [
+      "send"
+    ],
     "role": "button",
     "unnamed": true,
     "hint": "composer"
+  },
+  {
+    "name": "mic",
+    "text": [
+      "mic"
+    ],
+    "role": "button",
+    "unnamed": true,
+    "hint": "composer",
+    "bbox": {
+      "x": 1193,
+      "y": 540,
+      "width": 34,
+      "height": 34
+    }
+  },
+  {
+    "name": "exit",
+    "text": [
+      "exit"
+    ],
+    "role": "button",
+    "unnamed": true,
+    "hint": "banner",
+    "bbox": {
+      "x": 1212,
+      "y": 755,
+      "width": 16,
+      "height": 16
+    }
+  },
+  {
+    "name": "add",
+    "text": [
+      "add"
+    ],
+    "role": "button",
+    "unnamed": true,
+    "hint": "composer",
+    "bbox": {
+      "x": 493,
+      "y": 541,
+      "width": 32,
+      "height": 32
+    }
+  },
+  {
+    "name": "minimize",
+    "text": [
+      "minimize"
+    ],
+    "role": "button",
+    "unnamed": true,
+    "hint": "sidebar",
+    "bbox": {
+      "x": 235,
+      "y": 16,
+      "width": 28,
+      "height": 32
+    }
+  },
+  {
+    "name": "Terms & Conditions",
+    "text": [
+      "Terms & Conditions"
+    ],
+    "role": "button",
+    "unnamed": false,
+    "hint": "footer"
   }
 ]

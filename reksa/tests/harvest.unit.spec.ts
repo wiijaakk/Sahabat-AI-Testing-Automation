@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { harvestRole, matchEntry } from "../src/framework/harvest.ts";
+import { harvestRole, hintFor, matchEntry } from "../src/framework/harvest.ts";
 import type { HarvestNode, VocabEntry } from "../src/framework/types.ts";
 
 const view = { width: 1440, height: 900 };
@@ -132,4 +132,26 @@ test("send is the rightmost icon on the composer row even if it sits below the f
   const entry: VocabEntry = { name: "send", text: ["send"], unnamed: true, hint: "composer" };
   const hit = matchEntry(entry, sahabatComposer, view);
   expect(hit?.id).toBe("mic");
+});
+
+test("unnamed pin with a saved box hits that icon, not the neighbor", () => {
+  const plus: VocabEntry = {
+    name: "attach",
+    text: ["attach"],
+    unnamed: true,
+    hint: "composer",
+    role: "button",
+    bbox: { x: 493, y: 541, width: 32, height: 32 },
+  };
+  expect(matchEntry(plus, sahabatComposer, view)?.id).toBe("plus");
+});
+
+test("hintFor puts sidebar collapse in sidebar, not header", () => {
+  const collapse = node({
+    name: "",
+    unnamed: true,
+    bbox: { x: 199, y: 16, width: 32, height: 32 },
+  });
+  expect(hintFor(collapse, view)).toBe("sidebar");
+  expect(hintFor(sahabatComposer[2], view)).toBe("composer");
 });
