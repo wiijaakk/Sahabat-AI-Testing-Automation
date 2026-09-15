@@ -1,0 +1,63 @@
+{
+  "id": "as-008-multiple-upload",
+  "title": "AS-008 AI Storage multiple file upload",
+  "steps": [
+    {
+      "action": "gotoDashboard"
+    },
+    {
+      "action": "dismiss",
+      "target": "Skip"
+    },
+    {
+      "action": "tap",
+      "target": "AIStorage"
+    },
+    {
+      "action": "tap",
+      "target": "Create Project"
+    },
+    {
+      "action": "type",
+      "target": "Project Name",
+      "text": "SANITY_MA"
+    },
+    {
+      "action": "tap",
+      "target": "Create Project Confirm"
+    },
+    {
+      "action": "seeText",
+      "text": "SANITY_MA"
+    },
+    {
+      "action": "tapText",
+      "text": "SANITY_MA"
+    },
+    {
+      "action": "tap",
+      "target": "Upload Files"
+    },
+    {
+      "action": "upload",
+      "target": "Add Files Photos",
+      "text": "test-data/sanity-a.txt\ntest-data/sanity-b.txt\ntest-data/sanity-c.txt"
+    },
+    {
+      "action": "seeText",
+      "text": "sanity-a"
+    },
+    {
+      "action": "seeText",
+      "text": "sanity-b"
+    },
+    {
+      "action": "seeText",
+      "text": "sanity-c"
+    },
+    {
+      "action": "checkpoint",
+      "target": "three-files-uploaded"
+    }
+  ]
+}

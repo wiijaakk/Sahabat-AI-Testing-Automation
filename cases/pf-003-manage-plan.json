@@ -1,0 +1,13 @@
+{
+  "id": "pf-003-manage-plan",
+  "title": "PF-003 Profile manage plan",
+  "steps": [
+    { "action": "gotoDashboard" },
+    { "action": "dismiss", "target": "Skip" },
+    { "action": "tap", "target": "Profile Card" },
+    { "action": "checkpoint", "target": "profile-menu-open" },
+    { "action": "tap", "target": "Manage Plan" },
+    { "action": "seeAny", "text": "Current Plan | Basic | Max | Pro" },
+    { "action": "checkpoint", "target": "current-plan" }
+  ]
+}

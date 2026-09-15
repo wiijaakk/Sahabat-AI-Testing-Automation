@@ -1,1 +1,0 @@
-Coba bikin implementasi lu disini matt, nanti kita compare

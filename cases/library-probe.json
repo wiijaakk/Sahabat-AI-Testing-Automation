@@ -1,0 +1,11 @@
+{
+  "id": "library-probe",
+  "title": "PROBE Library asset card and its menu",
+  "steps": [
+    { "action": "gotoDashboard" },
+    { "action": "dismiss", "target": "Skip" },
+    { "action": "tap", "target": "Library" },
+    { "action": "seeText", "text": "SANITY" },
+    { "action": "checkpoint", "target": "library-with-assets" }
+  ]
+}

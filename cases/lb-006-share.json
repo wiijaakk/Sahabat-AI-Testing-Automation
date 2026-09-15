@@ -1,0 +1,16 @@
+{
+  "id": "lb-006-share",
+  "title": "LB-006 Library share asset",
+  "steps": [
+    { "action": "gotoDashboard" },
+    { "action": "dismiss", "target": "Skip" },
+    { "action": "tap", "target": "Library" },
+    { "action": "tapText", "text": "SANITY_SHARE_LIBRARY" },
+    { "action": "tap", "target": "Asset Menu" },
+    { "action": "checkpoint", "target": "asset-menu-open" },
+    { "action": "tap", "target": "Share" },
+    { "action": "see", "target": "Copy Link" },
+    { "action": "tap", "target": "Copy Link" },
+    { "action": "seeAny", "text": "Link copied | Copied | Copy successful" }
+  ]
+}

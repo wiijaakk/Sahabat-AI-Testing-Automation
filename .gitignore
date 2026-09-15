@@ -8,8 +8,15 @@ credentials.json
 **/secrets.json
 
 node_modules/
+dist/
+artifacts/
+storage/
+playwright-report/
+test-results/
 __pycache__/
 *.pyc
 .venv/
 venv/
 .DS_Store
+eng.traineddata
+*.traineddata

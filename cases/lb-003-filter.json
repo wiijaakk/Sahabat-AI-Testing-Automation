@@ -1,0 +1,15 @@
+{
+  "id": "lb-003-filter",
+  "title": "LB-003 Library filter",
+  "steps": [
+    { "action": "gotoDashboard" },
+    { "action": "dismiss", "target": "Skip" },
+    { "action": "tap", "target": "Library" },
+    { "action": "see", "target": "AI Creations" },
+    { "action": "see", "target": "Your Uploads" },
+    { "action": "tap", "target": "AI Creations" },
+    { "action": "checkpoint", "target": "library-ai-creations-filter" },
+    { "action": "tap", "target": "Your Uploads" },
+    { "action": "checkpoint", "target": "library-your-uploads-filter" }
+  ]
+}

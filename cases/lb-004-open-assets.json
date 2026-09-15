@@ -1,0 +1,15 @@
+{
+  "id": "lb-004-open-assets",
+  "title": "LB-004 Library open AI Creation and check Your Uploads",
+  "steps": [
+    { "action": "gotoDashboard" },
+    { "action": "dismiss", "target": "Skip" },
+    { "action": "tap", "target": "Library" },
+    { "action": "tap", "target": "AI Creations" },
+    { "action": "tapText", "text": "SANITY_AI_CREATION" },
+    { "action": "checkpoint", "target": "ai-creation-open" },
+    { "action": "tap", "target": "Library" },
+    { "action": "tap", "target": "Your Uploads" },
+    { "action": "checkpoint", "target": "your-uploads-tab" }
+  ]
+}

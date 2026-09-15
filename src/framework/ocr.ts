@@ -1,0 +1,135 @@
+import { createWorker, PSM, type Worker } from "tesseract.js";
+import { PNG } from "pngjs";
+import fs from "node:fs";
+import path from "node:path";
+import type { BBox } from "./types.ts";
+
+export type OcrWord = {
+  text: string;
+  bbox: BBox;
+  confidence: number;
+};
+
+export type OcrPage = {
+  text: string;
+  words: OcrWord[];
+};
+
+let worker: Worker | null = null;
+
+export async function getOcrWorker(): Promise<Worker> {
+  if (worker) return worker;
+  const cachePath = path.join(process.cwd(), "storage", "tessdata");
+  fs.mkdirSync(cachePath, { recursive: true });
+  worker = await createWorker("eng", undefined, { cachePath });
+  // sparse UI labels, not a novel
+  await worker.setParameters({ tessedit_pageseg_mode: PSM.SPARSE_TEXT });
+  return worker;
+}
+
+export async function stopOcrWorker() {
+  if (worker) {
+    await worker.terminate();
+    worker = null;
+  }
+}
+
+export type ReadOptions = {
+  /** Upscale factor before OCR. */
+  factor?: number;
+  /** Black/white threshold. Helps gray text inside fields, which OCR mangles in color. */
+  binarize?: boolean;
+};
+
+export async function readShot(png: Buffer, opts: ReadOptions = {}): Promise<OcrPage> {
+  const w = await getOcrWorker();
+  const scaled = upscale(png, opts.factor ?? 2, opts.binarize ?? false);
+  const { data } = await w.recognize(scaled.buf, undefined, { text: true, blocks: true });
+  const words: OcrWord[] = [];
+  for (const block of data.blocks ?? []) {
+    for (const para of block.paragraphs ?? []) {
+      for (const line of para.lines ?? []) {
+        for (const word of line.words ?? []) {
+          const text = word.text?.trim();
+          if (!text) continue;
+          words.push({
+            text,
+            confidence: word.confidence ?? 0,
+            bbox: {
+              x: word.bbox.x0 / scaled.factor,
+              y: word.bbox.y0 / scaled.factor,
+              width: (word.bbox.x1 - word.bbox.x0) / scaled.factor,
+              height: (word.bbox.y1 - word.bbox.y0) / scaled.factor,
+            },
+          });
+        }
+      }
+    }
+  }
+  return { text: data.text ?? "", words };
+}
+
+function upscale(png: Buffer, factor: number, binarize = false): { buf: Buffer; factor: number } {
+  try {
+    const src = PNG.sync.read(png);
+    if (src.width >= 1800 && !binarize) return { buf: png, factor: 1 };
+    const out = new PNG({ width: src.width * factor, height: src.height * factor });
+    for (let y = 0; y < src.height; y++) {
+      for (let x = 0; x < src.width; x++) {
+        const i = (src.width * y + x) << 2;
+        let r = src.data[i];
+        let g = src.data[i + 1];
+        let b = src.data[i + 2];
+        if (binarize) {
+          const v = 0.299 * r + 0.587 * g + 0.114 * b < 170 ? 0 : 255;
+          r = g = b = v;
+        }
+        for (let dy = 0; dy < factor; dy++) {
+          for (let dx = 0; dx < factor; dx++) {
+            const j = (out.width * (y * factor + dy) + (x * factor + dx)) << 2;
+            out.data[j] = r;
+            out.data[j + 1] = g;
+            out.data[j + 2] = b;
+            out.data[j + 3] = src.data[i + 3];
+          }
+        }
+      }
+    }
+    return { buf: Buffer.from(PNG.sync.write(out)), factor };
+  } catch {
+    // some images aren't strict png; tesseract can still eat them
+    return { buf: png, factor: 1 };
+  }
+}
+
+export function fold(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
+/** Sliding window over OCR words so "AI Creations" can sit on two boxes. */
+export function findPhrase(page: OcrPage, phrase: string): BBox | null {
+  const needle = phrase.trim().split(/\s+/).filter(Boolean);
+  if (needle.length === 0) return null;
+  const want = fold(phrase);
+
+  let best: { box: BBox; n: number } | null = null;
+  for (let i = 0; i < page.words.length; i++) {
+    // keep the window tiny so we don't merge New Chat..Library into one giant click target
+    const maxLen = Math.max(needle.length + 1, 2);
+    for (let len = 1; len <= maxLen && i + len <= page.words.length; len++) {
+      const chunk = page.words.slice(i, i + len);
+      if (fold(chunk.map((w) => w.text).join(" ")) !== want) continue;
+      const box = mergeBoxes(chunk.map((w) => w.bbox));
+      if (!best || len < best.n) best = { box, n: len };
+    }
+  }
+  return best?.box ?? null;
+}
+
+function mergeBoxes(boxes: BBox[]): BBox {
+  const x = Math.min(...boxes.map((b) => b.x));
+  const y = Math.min(...boxes.map((b) => b.y));
+  const r = Math.max(...boxes.map((b) => b.x + b.width));
+  const b = Math.max(...boxes.map((b) => b.y + b.height));
+  return { x, y, width: r - x, height: b - y };
+}
