@@ -294,6 +294,7 @@ export class SahabatDriver {
       drawBox(before, hit.bbox, true),
       true,
       `${Math.round(x)},${Math.round(y)} via ${hit.via}`,
+      hit.bbox,
     );
 
     await this.page.mouse.click(x, y);
@@ -314,6 +315,7 @@ export class SahabatDriver {
           drawBox(png, hit.bbox, false),
           false,
           `still at ${this.page.url()}, wanted ${entry.expectPath}`,
+          hit.bbox,
         );
         this.artifacts.finish("failed", `tap("${name}") stayed on ${this.page.url()}`);
         throw new Error(`tap("${name}"): still at ${this.page.url()}`);
@@ -357,7 +359,7 @@ export class SahabatDriver {
     }
 
     const marked = box ? drawBox(png, box, true) : png;
-    await this.artifacts.saveShot("see", name, marked, Boolean(box), box ? undefined : "not found");
+    await this.artifacts.saveShot("see", name, marked, Boolean(box), box ? undefined : "not found", box ?? undefined);
     if (!box) {
       this.artifacts.finish("failed", `see("${name}") failed`);
       throw new Error(`see("${name}"): not on this screen`);
@@ -427,6 +429,7 @@ export class SahabatDriver {
       drawBox(png, hit.bbox, true),
       true,
       `via ${hit.via}`,
+      hit.bbox,
     );
     await this.page.mouse.click(
       hit.bbox.x + hit.bbox.width / 2,
@@ -449,6 +452,7 @@ export class SahabatDriver {
       hit ? drawBox(png, hit.bbox, true) : png,
       Boolean(hit),
       hit ? `found "${hit.text}" via ${hit.via}` : "not found",
+      hit?.bbox,
     );
     if (!hit) {
       this.artifacts.finish("failed", `seeAny("${name}") failed`);
@@ -464,6 +468,7 @@ export class SahabatDriver {
       hit ? drawBox(png, hit.bbox, false) : png,
       !hit,
       hit ? `still visible via ${hit.via}` : "not visible",
+      hit?.bbox,
     );
     if (hit) {
       this.artifacts.finish("failed", `notSeeText("${text}") failed`);
@@ -479,7 +484,7 @@ export class SahabatDriver {
     const x = hit.bbox.x + hit.bbox.width / 2;
     const y = hit.bbox.y + Math.min(hit.bbox.height / 2, 24);
     const before = await this.grabPng();
-    await this.artifacts.saveShot("type", name, drawBox(before, hit.bbox, true), true, text.slice(0, 80));
+    await this.artifacts.saveShot("type", name, drawBox(before, hit.bbox, true), true, text.slice(0, 80), hit.bbox);
 
     await this.page.mouse.click(x, y);
     await this.page.waitForTimeout(400);
@@ -493,7 +498,7 @@ export class SahabatDriver {
     const hit = await this.findField(entry, "replace");
 
     const before = await this.grabPng();
-    await this.artifacts.saveShot("type", name, drawBox(before, hit.bbox, true), true, text.slice(0, 80));
+    await this.artifacts.saveShot("type", name, drawBox(before, hit.bbox, true), true, text.slice(0, 80), hit.bbox);
     await this.page.mouse.click(
       hit.bbox.x + hit.bbox.width / 2,
       hit.bbox.y + Math.min(hit.bbox.height / 2, 24),

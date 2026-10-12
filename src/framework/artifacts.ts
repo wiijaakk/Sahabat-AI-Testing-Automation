@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { EvidenceKind, EvidenceStep, RunManifest } from "./types.ts";
+import type { BBox, EvidenceKind, EvidenceStep, RunManifest } from "./types.ts";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -57,6 +57,10 @@ export function displayRunName(opts: {
   return opts.id;
 }
 
+function roundBox(box: BBox): BBox {
+  return { x: Math.round(box.x), y: Math.round(box.y), width: Math.round(box.width), height: Math.round(box.height) };
+}
+
 export class ArtifactSink {
   readonly dir: string;
   readonly manifest: RunManifest;
@@ -85,7 +89,7 @@ export class ArtifactSink {
     fs.writeFileSync(latest, this.dir);
   }
 
-  async saveShot(kind: EvidenceKind, name: string, png: Buffer, ok: boolean, detail?: string): Promise<EvidenceStep> {
+  async saveShot(kind: EvidenceKind, name: string, png: Buffer, ok: boolean, detail?: string, box?: BBox): Promise<EvidenceStep> {
     this.n += 1;
     const file = `${String(this.n).padStart(2, "0")}-${kind}-${slug(name, "shot")}.png`;
     fs.writeFileSync(path.join(this.dir, file), png);
@@ -95,6 +99,7 @@ export class ArtifactSink {
       ok,
       file,
       detail,
+      box: box ? roundBox(box) : undefined,
       at: new Date().toISOString(),
     };
     this.manifest.steps.push(step);

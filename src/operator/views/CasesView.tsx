@@ -1,60 +1,10 @@
 import { ArrowDown, ArrowUp, Copy, ListChecks, LoaderCircle, Play, Plus, Save, Trash2, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { ControlPicker, type ControlUsage } from "../components/ControlPicker";
 import { Chip, EmptyState, PageHeader, SectionTitle, Summary } from "../components/ui";
 import { ACTIONS, ACTION_META, FAMILY_STYLE, metaOf, needsControl, needsText, stepForAction, TEMPLATE_HINT } from "../lib/actions";
 import { json, jsonBody } from "../lib/api";
-import type { CaseStep, RunListItem, TestCase, VocabEntry } from "../lib/types";
-
-function ControlSelect(props: {
-  entries: VocabEntry[];
-  value?: string;
-  /** Put text fields first for Type / Replace so the four real fields are not buried under 50 buttons. */
-  preferFields?: boolean;
-  invalid?: boolean;
-  onChange: (v: string) => void;
-}) {
-  const names = props.entries.map((e) => e.name);
-  const unknown = props.value && !names.includes(props.value) ? props.value : null;
-  const fields = props.entries.filter((e) => e.role === "textbox").map((e) => e.name);
-  const others = props.entries.filter((e) => e.role !== "textbox").map((e) => e.name);
-  const grouped = props.preferFields && fields.length > 0;
-  return (
-    <select
-      className={`input ${props.invalid ? "border-danger text-danger" : ""}`}
-      value={props.value ?? ""}
-      onChange={(e) => props.onChange(e.target.value)}
-    >
-      <option value="" disabled={names.length > 0}>
-        {names.length ? "Pick a control" : "No catalog names yet"}
-      </option>
-      {unknown ? <option value={unknown}>{unknown} (not in catalog)</option> : null}
-      {grouped ? (
-        <>
-          <optgroup label="Text fields">
-            {fields.map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </optgroup>
-          <optgroup label="Other controls">
-            {others.map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </optgroup>
-        </>
-      ) : (
-        names.map((n) => (
-          <option key={n} value={n}>
-            {n}
-          </option>
-        ))
-      )}
-    </select>
-  );
-}
+import type { CaseStep, ControlPreview, RunListItem, TestCase, VocabEntry } from "../lib/types";
 
 function sameCase(a: TestCase | null, b: TestCase | null): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
@@ -90,6 +40,7 @@ export function CasesView(props: {
   const [saved, setSaved] = useState<TestCase | null>(null);
   const [newId, setNewId] = useState("");
   const [flash, setFlash] = useState<string | null>(null);
+  const [previews, setPreviews] = useState<Record<string, ControlPreview>>({});
 
   async function load() {
     const data = await json<{ cases: TestCase[] }>("/api/cases");
@@ -104,6 +55,27 @@ export function CasesView(props: {
   useEffect(() => {
     load().catch((err) => props.onError(String(err)));
   }, []);
+
+  // previews come from run screenshots, so refresh them whenever a run lands
+  const newestRun = props.runs[0] ? `${props.runs[0].id}:${props.runs[0].manifest?.status}` : "";
+  useEffect(() => {
+    json<{ previews: Record<string, ControlPreview> }>("/api/catalog/previews")
+      .then((r) => setPreviews(r.previews))
+      .catch(() => setPreviews({}));
+  }, [newestRun]);
+
+  /** Which saved cases point at each control, for grouping and the picker's "Used in". */
+  const usage: ControlUsage = useMemo(() => {
+    const out: ControlUsage = {};
+    for (const c of cases) {
+      for (const st of c.steps) {
+        if (!st.target || !needsControl(st.action)) continue;
+        const list = (out[st.target] ??= []);
+        if (!list.includes(c.id)) list.push(c.id);
+      }
+    }
+    return out;
+  }, [cases]);
 
   const dirty = current !== null && !sameCase(current, saved);
 
@@ -354,8 +326,11 @@ export function CasesView(props: {
                   const isField = ["type", "replace"].includes(step.action);
                   const missing = Boolean(needsControl(step.action) && step.target && !names.includes(step.target));
                   const payload = needsControl(step.action) ? (
-                    <ControlSelect
+                    <ControlPicker
                       entries={catalog}
+                      previews={previews}
+                      usage={usage}
+                      inCase={current.steps.filter((s, j) => j !== i && s.target && needsControl(s.action)).map((s) => s.target!)}
                       preferFields={isField}
                       invalid={missing}
                       value={step.target}
