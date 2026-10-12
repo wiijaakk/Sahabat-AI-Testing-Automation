@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type View = "catalog" | "cases" | "runs";
 
@@ -126,28 +126,65 @@ function stepForAction(action: string, prev: CaseStep, names: string[]): CaseSte
   return { action };
 }
 
-function ControlSelect(props: { names: string[]; value?: string; onChange: (v: string) => void }) {
-  const options =
-    props.value && !props.names.includes(props.value) ? [props.value, ...props.names] : props.names;
+function ControlSelect(props: {
+  entries: VocabEntry[];
+  value?: string;
+  /** Put text fields first for Type / Replace so the four real fields are not buried under 50 buttons. */
+  preferFields?: boolean;
+  onChange: (v: string) => void;
+}) {
+  const names = props.entries.map((e) => e.name);
+  const unknown = props.value && !names.includes(props.value) ? props.value : null;
+  const fields = props.entries.filter((e) => e.role === "textbox").map((e) => e.name);
+  const others = props.entries.filter((e) => e.role !== "textbox").map((e) => e.name);
+  const grouped = props.preferFields && fields.length > 0;
   return (
     <select value={props.value ?? ""} onChange={(e) => props.onChange(e.target.value)}>
-      <option value="" disabled={options.length > 0}>
-        {options.length ? "Pick a control" : "No catalog names yet"}
+      <option value="" disabled={names.length > 0}>
+        {names.length ? "Pick a control" : "No catalog names yet"}
       </option>
-      {options.map((n) => (
-        <option key={n} value={n}>
-          {n}
-        </option>
-      ))}
+      {unknown ? <option value={unknown}>{unknown} (not in catalog)</option> : null}
+      {grouped ? (
+        <>
+          <optgroup label="Text fields">
+            {fields.map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </optgroup>
+          <optgroup label="Other controls">
+            {others.map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </optgroup>
+        </>
+      ) : (
+        names.map((n) => (
+          <option key={n} value={n}>
+            {n}
+          </option>
+        ))
+      )}
     </select>
   );
 }
+
+const TEMPLATE_HINT = "{{runTag}} becomes a unique 6-digit stamp per run, {{runAlpha}} the same in letters.";
 
 async function json<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, init);
   const data = await res.json();
   if (!res.ok) throw new Error(data.error ?? res.statusText);
   return data as T;
+}
+
+/** Which case a run folder belongs to: run ids end with the case id. */
+function caseIdOfRun(runId: string, caseIds: string[]): string | undefined {
+  const tail = runId.replace(/^\d{8}-\d{6}-/, "");
+  return caseIds.find((id) => id === tail);
 }
 
 export function App() {
@@ -157,16 +194,40 @@ export function App() {
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [detail, setDetail] = useState<RunDetail | null>(null);
+  const [caseIds, setCaseIds] = useState<string[]>([]);
+  const selectedRef = useRef<string | null>(null);
+  selectedRef.current = selected;
+
+  async function loadDetail(id: string) {
+    try {
+      const data = await json<RunDetail>(`/api/runs/${id}`);
+      // ignore a late answer for a run the user has already moved away from
+      if (selectedRef.current === id) setDetail(data);
+    } catch (err) {
+      setError(String(err));
+    }
+  }
 
   async function refresh() {
     const data = await json<Status>("/api/status");
     setStatus(data);
     // don't yank the user back to the newest run every poll
     setSelected((prev) => prev ?? data.lastRuns[0]?.id ?? null);
+    // evidence is flushed step by step, so keep the open run fresh while it runs
+    const open = selectedRef.current;
+    if (open && data.current?.id === open && data.current.status === "running") {
+      await loadDetail(open);
+    }
+  }
+
+  async function loadCaseIds() {
+    const data = await json<{ cases: { id: string }[] }>("/api/cases");
+    setCaseIds(data.cases.map((c) => c.id));
   }
 
   useEffect(() => {
     refresh().catch((err) => setError(String(err)));
+    loadCaseIds().catch(() => {});
     const t = setInterval(() => {
       refresh().catch(() => {});
     }, 1500);
@@ -175,19 +236,20 @@ export function App() {
 
   useEffect(() => {
     if (!selected) return;
-    fetch(`/api/runs/${selected}`)
-      .then((r) => r.json())
-      .then(setDetail)
-      .catch((err) => setError(String(err)));
+    loadDetail(selected);
   }, [selected, status?.current?.status, status?.lastRuns.length]);
 
-  async function post(path: string, kind: string) {
+  useEffect(() => {
+    if (view === "cases" || view === "runs") loadCaseIds().catch(() => {});
+  }, [view]);
+
+  async function post(path: string, kind: string, opts: { stay?: boolean } = {}) {
     setError(null);
     setBusy(kind);
     try {
       const data = await json<{ id: string }>(path, { method: "POST" });
       setSelected(data.id);
-      setView("runs");
+      if (!opts.stay) setView("runs");
     } catch (err) {
       setError(String(err));
     } finally {
@@ -196,6 +258,16 @@ export function App() {
   }
 
   const running = status?.current?.status === "running";
+  const profile = Boolean(status?.profile);
+  const needsLogin = status !== null && !profile;
+  const noProfileTitle = needsLogin ? "Save login first so there is a Chrome profile to run in." : undefined;
+  const runCase = (id: string) => post(`/api/run-case/${id}`, "case");
+  const current = status?.current ?? null;
+  const currentLabel = current
+    ? current.kind === "case" && current.caseId
+      ? current.caseId
+      : current.kind
+    : null;
 
   return (
     <div className="layout">
@@ -217,11 +289,12 @@ export function App() {
         </nav>
         <div className="side-actions">
           <button disabled={running || busy !== null} onClick={() => post("/api/login", "login")}>
-            {busy === "login" ? "Opening Chrome…" : "Save login"}
+            {busy === "login" ? "Opening Chrome…" : profile ? "Save login again" : "Save login"}
           </button>
           <button
             className="secondary"
-            disabled={running || busy !== null}
+            disabled={running || busy !== null || needsLogin}
+            title={noProfileTitle}
             onClick={() => post("/api/run", "smoke")}
           >
             {busy === "smoke" ? "Starting…" : "Run library smoke"}
@@ -230,30 +303,61 @@ export function App() {
         <div className="side-meta">
           <div>
             Chrome profile:{" "}
-            <b className={status?.profile ? "ok" : "bad"}>{status?.profile ? "found" : "missing"}</b>
+            <b className={profile ? "ok" : "bad"}>{status ? (profile ? "found" : "missing") : "…"}</b>
           </div>
-          <div>
-            Current: <b>{status?.current ? `${status.current.kind} · ${status.current.status}` : "idle"}</b>
-          </div>
-          {error ? <div className="bad">{error}</div> : null}
+          {running && current ? (
+            <div>
+              Running: <b className="pulse">{currentLabel}</b>
+            </div>
+          ) : current ? (
+            <div>
+              Last job:{" "}
+              <b>
+                {currentLabel} ·{" "}
+                <span className={current.status === "passed" ? "ok" : "bad"}>{current.status}</span>
+              </b>
+            </div>
+          ) : (
+            <div>
+              Idle · <b>no job yet</b>
+            </div>
+          )}
         </div>
       </aside>
 
       <main className="main">
+        {error ? (
+          <div className="banner bad" role="alert">
+            <span>{error}</span>
+            <button type="button" className="ghost" onClick={() => setError(null)} aria-label="Dismiss error">
+              ×
+            </button>
+          </div>
+        ) : null}
+        {needsLogin && view !== "runs" ? (
+          <div className="banner warn">
+            <span>No Chrome profile yet. Click <b>Save login</b> and finish signing in, then come back here.</span>
+          </div>
+        ) : null}
         {view === "catalog" ? (
           <CatalogView
             running={running}
             busy={busy}
             vision={Boolean(status?.vision)}
-            onScan={() => post("/api/scan", "scan")}
+            onScan={() => post("/api/scan", "scan", { stay: true })}
             onError={setError}
+            scanJob={current && current.kind === "scan" ? current : null}
           />
         ) : null}
         {view === "cases" ? (
           <CasesView
             running={running}
             busy={busy}
-            onRun={(id) => post(`/api/run-case/${id}`, "case")}
+            canRun={!needsLogin}
+            noRunTitle={noProfileTitle}
+            runs={status?.lastRuns ?? []}
+            onRun={runCase}
+            onCasesChanged={() => loadCaseIds().catch(() => {})}
             onError={setError}
           />
         ) : null}
@@ -263,6 +367,11 @@ export function App() {
             selected={selected}
             onSelect={setSelected}
             detail={detail}
+            running={running}
+            currentId={current?.id ?? null}
+            caseIds={caseIds}
+            canRun={!needsLogin && !running && busy === null}
+            onRun={runCase}
           />
         ) : null}
       </main>
@@ -467,17 +576,28 @@ function CatalogView(props: {
   vision: boolean;
   onScan: () => void;
   onError: (s: string) => void;
+  scanJob: { status: string } | null;
 }) {
   const [entries, setEntries] = useState<VocabEntry[]>([]);
   const [harvest, setHarvest] = useState<Harvest | null>(null);
+  const [cases, setCases] = useState<TestCase[]>([]);
   const [newName, setNewName] = useState("");
   const [newAliases, setNewAliases] = useState("");
+  const [filter, setFilter] = useState("");
 
   async function load() {
     const cat = await json<{ entries: VocabEntry[] }>("/api/catalog");
     setEntries(cat.entries);
     const h = await json<{ harvest: Harvest | null }>("/api/harvest");
     setHarvest(h.harvest);
+    const c = await json<{ cases: TestCase[] }>("/api/cases");
+    setCases(c.cases);
+  }
+
+  /** How many cases reference a control, so Remove can warn instead of silently breaking them. */
+  function usedIn(name: string): string[] {
+    const n = name.toLowerCase();
+    return cases.filter((c) => c.steps.some((s) => (s.target ?? "").toLowerCase() === n)).map((c) => c.id);
   }
 
   useEffect(() => {
@@ -513,6 +633,12 @@ function CatalogView(props: {
   }
 
   function remove(name: string) {
+    const users = usedIn(name);
+    const msg =
+      users.length > 0
+        ? `"${name}" is used by ${users.length} case${users.length === 1 ? "" : "s"} (${users.slice(0, 4).join(", ")}${users.length > 4 ? ", …" : ""}). Those steps will fail. Remove anyway?`
+        : `Remove "${name}" from the catalog?`;
+    if (!window.confirm(msg)) return;
     save(entries.filter((e) => e.name !== name)).catch((err) => props.onError(String(err)));
   }
 
@@ -539,6 +665,16 @@ function CatalogView(props: {
 
   const savedNames = useMemo(() => new Set(entries.map((e) => e.name.toLowerCase())), [entries]);
   const named = (harvest?.nodes ?? []).filter((n) => !n.unnamed);
+  const scanning = props.busy === "scan" || (props.running && props.scanJob?.status === "running");
+  const q = filter.trim().toLowerCase();
+  const shown = q
+    ? entries.filter(
+        (e) =>
+          e.name.toLowerCase().includes(q) ||
+          e.text.some((t) => t.toLowerCase().includes(q)) ||
+          (e.hint ?? "").includes(q),
+      )
+    : entries;
 
   return (
     <>
@@ -548,10 +684,14 @@ function CatalogView(props: {
       </p>
       <div className="row" style={{ marginBottom: 14 }}>
         <button className="btn" disabled={props.running || props.busy !== null} onClick={props.onScan}>
-          {props.busy === "scan" ? "Scanning…" : "Scan screen"}
+          {scanning ? "Scanning…" : "Scan screen"}
         </button>
         <span className="tiny">
-          {harvest ? `${harvest.nodes.length} controls · ${harvest.url}` : "No harvest yet"}
+          {scanning
+            ? "Chrome is opening the dashboard and reading the screen. This takes about 20 seconds."
+            : harvest
+              ? `${harvest.nodes.length} controls · ${harvest.url} · scanned ${new Date(harvest.at).toLocaleString()}`
+              : "No harvest yet. Scan to see what is on the dashboard right now."}
         </span>
       </div>
       {harvest ? (
@@ -567,6 +707,11 @@ function CatalogView(props: {
       <div className="split" style={{ marginTop: 16 }}>
         <section className="card">
           <h3>Named on this screen</h3>
+          {named.length === 0 ? (
+            <p className="tiny">
+              {harvest ? "Nothing with a label on this screen." : "Scan the screen to list the controls Flutter exposes."}
+            </p>
+          ) : null}
           <ul className="list">
             {named.map((n) => {
               const already = savedNames.has(n.name.toLowerCase());
@@ -587,57 +732,97 @@ function CatalogView(props: {
           </ul>
         </section>
         <section className="card">
-          <h3>Saved</h3>
-          <ul className="list">
-            {entries.map((e) => (
-              <li key={e.name}>
-                <div>
-                  <div>
-                    {e.name} {e.unnamed ? <span className="badge">icon</span> : null}
-                    {e.hint ? <span className="tiny"> · {e.hint}</span> : null}
-                  </div>
-                  <div className="tiny">{e.text.join(", ")}</div>
-                </div>
-                <button className="ghost danger" onClick={() => remove(e.name)}>
-                  Remove
-                </button>
-              </li>
-            ))}
-          </ul>
-          <div className="form-grid">
-            <input placeholder="Name" value={newName} onChange={(e) => setNewName(e.target.value)} />
+          <div className="row" style={{ justifyContent: "space-between", marginBottom: 10 }}>
+            <h3 style={{ margin: 0 }}>
+              Saved <span className="tiny">({shown.length === entries.length ? entries.length : `${shown.length} of ${entries.length}`})</span>
+            </h3>
             <input
-              placeholder="Aliases, comma separated"
+              className="filter"
+              placeholder="Filter by name or alias"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+            />
+          </div>
+          <form
+            className="form-grid add-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              addManual();
+            }}
+          >
+            <input placeholder="New control name" value={newName} onChange={(e) => setNewName(e.target.value)} />
+            <input
+              placeholder="Text as shown on screen, comma separated aliases"
               value={newAliases}
               onChange={(e) => setNewAliases(e.target.value)}
             />
-            <button className="btn secondary" onClick={addManual}>
-              Add predefined
+            <button className="btn secondary" type="submit" disabled={!newName.trim()}>
+              Add by text
             </button>
-          </div>
+          </form>
+          <ul className="list">
+            {shown.map((e) => {
+              const users = usedIn(e.name);
+              return (
+                <li key={e.name}>
+                  <div>
+                    <div>
+                      {e.name} {e.unnamed ? <span className="badge">icon</span> : null}
+                      {e.role === "textbox" ? <span className="badge">field</span> : null}
+                      {e.hint ? <span className="tiny"> · {e.hint}</span> : null}
+                    </div>
+                    <div className="tiny">
+                      {e.text.join(", ")}
+                      {users.length > 0 ? ` · used in ${users.length} case${users.length === 1 ? "" : "s"}` : ""}
+                    </div>
+                  </div>
+                  <button className="ghost danger" onClick={() => remove(e.name)}>
+                    Remove
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+          {shown.length === 0 && q ? <p className="tiny">Nothing matches “{filter}”.</p> : null}
         </section>
       </div>
     </>
   );
 }
 
+function sameCase(a: TestCase | null, b: TestCase | null): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
 function CasesView(props: {
   running: boolean;
   busy: string | null;
+  canRun: boolean;
+  noRunTitle?: string;
+  runs: RunListItem[];
   onRun: (id: string) => void;
+  onCasesChanged: () => void;
   onError: (s: string) => void;
 }) {
   const [cases, setCases] = useState<TestCase[]>([]);
   const [catalog, setCatalog] = useState<VocabEntry[]>([]);
   const [current, setCurrent] = useState<TestCase | null>(null);
+  /** What is on disk for the open case, so we can tell if the editor is dirty. */
+  const [saved, setSaved] = useState<TestCase | null>(null);
   const [newId, setNewId] = useState("");
+  const [flash, setFlash] = useState<string | null>(null);
 
   async function load() {
     const data = await json<{ cases: TestCase[] }>("/api/cases");
     setCases(data.cases);
+    const first = data.cases[0] ?? null;
     setCurrent((prev) => {
-      if (prev) return data.cases.find((c) => c.id === prev.id) ?? data.cases[0] ?? null;
-      return data.cases[0] ?? null;
+      if (prev) return data.cases.find((c) => c.id === prev.id) ?? first;
+      return first;
+    });
+    setSaved((prev) => {
+      if (prev) return data.cases.find((c) => c.id === prev.id) ?? first;
+      return first;
     });
     const cat = await json<{ entries: VocabEntry[] }>("/api/catalog");
     setCatalog(cat.entries);
@@ -647,17 +832,49 @@ function CasesView(props: {
     load().catch((err) => props.onError(String(err)));
   }, []);
 
-  async function persist(next: TestCase) {
-    const saved = await json<{ case: TestCase }>(`/api/cases/${next.id}`, {
+  const dirty = current !== null && !sameCase(current, saved);
+
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
+
+  function showFlash(text: string) {
+    setFlash(text);
+    window.setTimeout(() => setFlash((f) => (f === text ? null : f)), 1800);
+  }
+
+  async function persist(next: TestCase): Promise<TestCase> {
+    const res = await json<{ case: TestCase }>(`/api/cases/${next.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(next),
     });
-    setCurrent(saved.case);
+    setCurrent(res.case);
+    setSaved(res.case);
     setCases((all) => {
-      const rest = all.filter((c) => c.id !== saved.case.id);
-      return [...rest, saved.case].sort((a, b) => a.id.localeCompare(b.id));
+      const rest = all.filter((c) => c.id !== res.case.id);
+      return [...rest, res.case].sort((a, b) => a.id.localeCompare(b.id));
     });
+    props.onCasesChanged();
+    return res.case;
+  }
+
+  async function save() {
+    if (!current) return;
+    await persist(current);
+    showFlash("Saved");
+  }
+
+  function open(c: TestCase) {
+    if (c.id === current?.id) return;
+    if (dirty && !window.confirm(`Discard unsaved changes to "${current?.title}"?`)) return;
+    setCurrent(c);
+    setSaved(c);
   }
 
   function patch(partial: Partial<TestCase>) {
@@ -678,9 +895,12 @@ function CasesView(props: {
     patch({ steps });
   }
 
-  function addStep() {
+  function addStep(at?: number) {
     if (!current) return;
-    patch({ steps: [...current.steps, { action: "tap", target: catalog[0]?.name }] });
+    const fresh: CaseStep = { action: "tap", target: catalog[0]?.name };
+    const steps = current.steps.slice();
+    steps.splice(at ?? steps.length, 0, fresh);
+    patch({ steps });
   }
 
   function removeStep(i: number) {
@@ -697,15 +917,51 @@ function CasesView(props: {
     patch({ steps });
   }
 
+  function cleanId(raw: string) {
+    return raw.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "").replace(/-+/g, "-");
+  }
+
   async function createCase() {
-    const id = newId.trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
+    const id = cleanId(newId);
     if (!id) return;
-    const next: TestCase = { id, title: id, steps: [{ action: "gotoDashboard" }] };
+    if (cases.some((c) => c.id === id)) {
+      props.onError(`A case called "${id}" already exists. Open it from the list or pick another id.`);
+      return;
+    }
+    if (dirty && !window.confirm(`Discard unsaved changes to "${current?.title}"?`)) return;
+    const next: TestCase = { id, title: id, steps: [{ action: "gotoDashboard" }, { action: "dismiss", target: "Skip" }] };
     await persist(next);
     setNewId("");
   }
 
+  async function duplicateCase() {
+    if (!current) return;
+    let id = `${current.id}-copy`;
+    let n = 2;
+    while (cases.some((c) => c.id === id)) id = `${current.id}-copy-${n++}`;
+    const next: TestCase = { ...current, id, title: `${current.title} (copy)` };
+    await persist(next);
+    showFlash(`Duplicated as ${id}`);
+  }
+
+  async function deleteCase() {
+    if (!current) return;
+    if (!window.confirm(`Delete case "${current.title}" (${current.id})? The JSON file is removed.`)) return;
+    await json(`/api/cases/${current.id}`, { method: "DELETE" });
+    const rest = cases.filter((c) => c.id !== current.id);
+    setCases(rest);
+    setCurrent(rest[0] ?? null);
+    setSaved(rest[0] ?? null);
+    props.onCasesChanged();
+  }
+
+  /** Newest run folder for a case, so the list can show pass/fail at a glance. */
+  function lastRunOf(id: string): RunListItem | undefined {
+    return props.runs.find((r) => r.id.replace(/^\d{8}-\d{6}-/, "") === id);
+  }
+
   const names = catalog.map((e) => e.name);
+  const newIdPreview = cleanId(newId);
 
   return (
     <>
@@ -714,29 +970,51 @@ function CasesView(props: {
       <div className="split cases-split">
         <section className="card">
           <h3>Saved cases</h3>
-          <ul className="list">
-            {cases.map((c) => (
-              <li
-                key={c.id}
-                className={c.id === current?.id ? "item active" : "item"}
-                style={{ cursor: "pointer" }}
-                onClick={() => setCurrent(c)}
-              >
-                <div>
-                  <div>{c.title}</div>
-                  <div className="tiny">
-                    {c.id} · {c.steps.length} steps
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-          <div className="form-grid">
+          <form
+            className="form-grid"
+            style={{ marginTop: 0, marginBottom: 10 }}
+            onSubmit={(e) => {
+              e.preventDefault();
+              createCase().catch((err) => props.onError(String(err)));
+            }}
+          >
             <input placeholder="new-case-id" value={newId} onChange={(e) => setNewId(e.target.value)} />
-            <button className="btn secondary" onClick={() => createCase().catch((err) => props.onError(String(err)))}>
+            {newId && newIdPreview !== newId.trim() ? (
+              <span className="tiny">Will be saved as {newIdPreview || "…"}</span>
+            ) : null}
+            <button className="btn secondary" type="submit" disabled={!newIdPreview}>
               New case
             </button>
-          </div>
+          </form>
+          <ul className="list">
+            {cases.map((c) => {
+              const last = lastRunOf(c.id);
+              const st = last?.manifest?.status;
+              return (
+                <li
+                  key={c.id}
+                  className={c.id === current?.id ? "item active" : "item"}
+                  style={{ cursor: "pointer" }}
+                  onClick={() => open(c)}
+                >
+                  <div>
+                    <div>
+                      {c.title}
+                      {c.id === current?.id && dirty ? <span className="badge warn-badge">unsaved</span> : null}
+                    </div>
+                    <div className="tiny">
+                      {c.id} · {c.steps.length} steps
+                    </div>
+                  </div>
+                  {st ? (
+                    <span className={`chip ${st}`} title={`Last run ${last?.when ?? ""}`}>
+                      {st}
+                    </span>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
         </section>
         <section className="card case-editor">
           {current ? (
@@ -747,21 +1025,37 @@ function CasesView(props: {
                   <input value={current.title} onChange={(e) => patch({ title: e.target.value })} />
                   <span className="tiny">
                     {current.id} · {current.steps.length} {current.steps.length === 1 ? "step" : "steps"}
+                    {dirty ? <b className="bad"> · unsaved changes</b> : flash ? <b className="ok"> · {flash}</b> : null}
                   </span>
                 </label>
                 <div className="editor-actions">
                   <button
-                    className="btn secondary"
-                    onClick={() => persist(current).catch((err) => props.onError(String(err)))}
+                    className="ghost"
+                    type="button"
+                    onClick={() => duplicateCase().catch((err) => props.onError(String(err)))}
                   >
-                    Save
+                    Duplicate
+                  </button>
+                  <button
+                    className="ghost danger"
+                    type="button"
+                    onClick={() => deleteCase().catch((err) => props.onError(String(err)))}
+                  >
+                    Delete
+                  </button>
+                  <button
+                    className={dirty ? "btn" : "btn secondary"}
+                    onClick={() => save().catch((err) => props.onError(String(err)))}
+                  >
+                    {dirty ? "Save changes" : "Save"}
                   </button>
                   <button
                     className="btn"
-                    disabled={props.running || props.busy !== null}
+                    disabled={props.running || props.busy !== null || !props.canRun}
+                    title={props.noRunTitle}
                     onClick={() => saveAndRun().catch((err) => props.onError(String(err)))}
                   >
-                    {props.busy === "case" ? "Starting…" : "Run this case"}
+                    {props.busy === "case" ? "Starting…" : props.running ? "A run is in progress" : dirty ? "Save & run" : "Run this case"}
                   </button>
                 </div>
               </div>
@@ -776,12 +1070,18 @@ function CasesView(props: {
                     label: step.action,
                     hint: "",
                   };
+                  const isField = ["type", "replace"].includes(step.action);
+                  const missing = needsControl(step.action) && step.target && !names.includes(step.target);
                   const payload =
                     needsControl(step.action) ? (
                       <label className="field">
-                        <span>{["type", "replace"].includes(step.action) ? "Field" : "Control"}</span>
+                        <span>
+                          {isField ? "Field" : "Control"}
+                          {missing ? <b className="bad"> · not in catalog</b> : null}
+                        </span>
                         <ControlSelect
-                          names={names}
+                          entries={catalog}
+                          preferFields={isField}
                           value={step.target}
                           onChange={(v) => setStep(i, { ...step, target: v })}
                         />
@@ -838,13 +1138,19 @@ function CasesView(props: {
                             />
                           </label>
                         ) : null}
-                        {meta.hint ? <p className="tiny step-hint">{meta.hint}</p> : null}
+                        {meta.hint ? (
+                          <p className="tiny step-hint">
+                            {meta.hint}
+                            {needsText(step.action) && step.action !== "upload" ? ` ${TEMPLATE_HINT}` : ""}
+                          </p>
+                        ) : null}
                       </div>
                       <div className="step-tools">
                         <button
                           type="button"
                           className="icon-btn"
                           aria-label="Move up"
+                          title="Move up"
                           disabled={i === 0}
                           onClick={() => move(i, -1)}
                         >
@@ -854,6 +1160,7 @@ function CasesView(props: {
                           type="button"
                           className="icon-btn"
                           aria-label="Move down"
+                          title="Move down"
                           disabled={i === current.steps.length - 1}
                           onClick={() => move(i, 1)}
                         >
@@ -861,8 +1168,18 @@ function CasesView(props: {
                         </button>
                         <button
                           type="button"
+                          className="icon-btn"
+                          aria-label="Insert step below"
+                          title="Insert step below"
+                          onClick={() => addStep(i + 1)}
+                        >
+                          +
+                        </button>
+                        <button
+                          type="button"
                           className="icon-btn danger"
                           aria-label="Remove step"
+                          title="Remove step"
                           disabled={current.steps.length === 1}
                           onClick={() => removeStep(i)}
                         >
@@ -873,7 +1190,7 @@ function CasesView(props: {
                   );
                 })}
               </div>
-              <button className="btn ghost-add" type="button" onClick={addStep}>
+              <button className="btn ghost-add" type="button" onClick={() => addStep()}>
                 Add step
               </button>
             </>
@@ -901,65 +1218,156 @@ function runWhen(run: RunListItem): string {
   return run.id;
 }
 
+function runStatusOf(run: RunListItem, currentId: string | null, running: boolean): string {
+  if (run.manifest?.status === "running" || (running && run.id === currentId)) return "running";
+  return run.manifest?.status ?? "no manifest";
+}
+
 function RunsView(props: {
   runs: RunListItem[];
   selected: string | null;
   onSelect: (id: string) => void;
   detail: RunDetail | null;
+  running: boolean;
+  currentId: string | null;
+  caseIds: string[];
+  canRun: boolean;
+  onRun: (id: string) => void;
 }) {
+  const [showLog, setShowLog] = useState(false);
+  const detail = props.detail;
+  const manifest = detail?.manifest ?? null;
+  const steps = manifest?.steps ?? [];
+  const isLive = props.running && props.selected === props.currentId;
+  const status = manifest?.status ?? (isLive ? "running" : detail?.job?.status ?? null);
+  const firstFail = steps.find((s) => !s.ok);
+  const caseId = props.selected ? caseIdOfRun(props.selected, props.caseIds) : undefined;
+  const selectedRun = props.runs.find((r) => r.id === props.selected);
+  const log = detail?.job?.log ?? "";
+
+  function jump(file: string) {
+    document.getElementById(`shot-${file}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   return (
     <>
       <h2>Runs</h2>
-      <p className="lede">Evidence after the headed Chrome job finishes. Nothing is live-streamed.</p>
-      <div className="split">
+      <p className="lede">
+        Every tap, check and checkpoint saves a screenshot. The open run refreshes while Chrome is still working.
+      </p>
+      <div className="split runs-split">
         <section className="card">
           <h3>History</h3>
+          {props.runs.length === 0 ? <p className="tiny">No runs yet. Save login or run a case.</p> : null}
           <ul className="list">
-            {props.runs.map((run) => (
-              <li key={run.id}>
-                <button
-                  className="ghost"
-                  style={{
-                    width: "100%",
-                    textAlign: "left",
-                    background: run.id === props.selected ? "var(--pink-dim)" : "white",
-                    borderColor: run.id === props.selected ? "var(--pink)" : undefined,
-                  }}
-                  onClick={() => props.onSelect(run.id)}
-                >
-                  <div>{run.name || run.manifest?.test || run.id}</div>
-                  <div className="tiny">
-                    {run.when || runWhen(run)}
-                    {run.manifest ? ` · ${run.manifest.status}` : ""}
-                  </div>
-                </button>
-              </li>
-            ))}
+            {props.runs.map((run) => {
+              const st = runStatusOf(run, props.currentId, props.running);
+              return (
+                <li key={run.id} className={run.id === props.selected ? "item active run-item" : "item run-item"}>
+                  <button type="button" className="run-pick" onClick={() => props.onSelect(run.id)}>
+                    <div>{run.name || run.manifest?.test || run.id}</div>
+                    <div className="tiny">{run.when || runWhen(run)}</div>
+                  </button>
+                  <span className={`chip ${st}`}>{st}</span>
+                </li>
+              );
+            })}
           </ul>
         </section>
-        <section className="card">
-          <h3>Evidence</h3>
-          {!props.detail?.manifest && !props.detail?.shots?.length ? (
-            <p className="tiny">No shots yet. Save login or run a case.</p>
-          ) : (
-            <>
-              {props.detail?.manifest?.error ? <p className="bad">{props.detail.manifest.error}</p> : null}
-              <div className="gallery">
-                {(props.detail?.manifest?.steps ?? []).map((step) => (
-                  <figure className="shot" key={step.file}>
-                    <img src={`/artifacts/runs/${props.detail?.manifest?.id}/${step.file}`} alt={step.name} />
-                    <figcaption>
-                      <span>
-                        {step.kind} · {step.name}
-                      </span>
-                      <b className={step.ok ? "ok" : "bad"}>{step.ok ? "ok" : "fail"}</b>
-                    </figcaption>
-                  </figure>
-                ))}
+        <section className="card evidence">
+          <div className="evidence-head">
+            <div>
+              <h3 style={{ margin: 0 }}>{selectedRun?.name ?? manifest?.test ?? "Evidence"}</h3>
+              <div className="tiny">
+                {selectedRun?.when ? `${selectedRun.when} · ` : ""}
+                {steps.length} shot{steps.length === 1 ? "" : "s"}
+                {manifest?.finishedAt && manifest.startedAt
+                  ? ` · ${Math.round((new Date(manifest.finishedAt).getTime() - new Date(manifest.startedAt).getTime()) / 1000)}s`
+                  : ""}
               </div>
-              {props.detail?.job?.log ? <pre className="log">{props.detail.job.log}</pre> : null}
-            </>
-          )}
+            </div>
+            <div className="row">
+              {status ? <span className={`chip ${status}`}>{status}</span> : null}
+              {caseId ? (
+                <button
+                  type="button"
+                  className="btn"
+                  disabled={!props.canRun}
+                  title={props.canRun ? `Run ${caseId} again` : "Wait for the current run, or save login first."}
+                  onClick={() => props.onRun(caseId)}
+                >
+                  Run again
+                </button>
+              ) : null}
+            </div>
+          </div>
+
+          {!props.selected ? (
+            <p className="tiny">Pick a run on the left.</p>
+          ) : !manifest && steps.length === 0 ? (
+            <p className="tiny">
+              {isLive
+                ? "Chrome is starting. The first screenshot shows up here in a few seconds."
+                : "This run never wrote a manifest, so there are no shots. Check the log below."}
+            </p>
+          ) : null}
+
+          {manifest?.error ? (
+            <p className="banner bad" style={{ margin: "12px 0" }}>
+              <span>{manifest.error}</span>
+              {firstFail ? (
+                <button type="button" className="ghost" onClick={() => jump(firstFail.file)}>
+                  Jump to failing step
+                </button>
+              ) : null}
+            </p>
+          ) : null}
+
+          {steps.length > 0 ? (
+            <ol className="step-strip" aria-label="Steps">
+              {steps.map((step, i) => (
+                <li key={step.file}>
+                  <button
+                    type="button"
+                    className={step.ok ? "step-pill ok" : "step-pill fail"}
+                    title={`${step.kind} · ${step.name}${step.detail ? ` · ${step.detail}` : ""}`}
+                    onClick={() => jump(step.file)}
+                  >
+                    <b>{i + 1}</b> {step.kind}
+                  </button>
+                </li>
+              ))}
+              {isLive ? (
+                <li>
+                  <span className="step-pill running pulse">working…</span>
+                </li>
+              ) : null}
+            </ol>
+          ) : null}
+
+          <div className="gallery">
+            {steps.map((step, i) => (
+              <figure className={step.ok ? "shot" : "shot failed"} key={step.file} id={`shot-${step.file}`}>
+                <figcaption>
+                  <span>
+                    <b className="step-idx">{i + 1}</b> {step.kind} · {step.name}
+                    {step.detail ? <span className="tiny"> · {step.detail}</span> : null}
+                  </span>
+                  <b className={step.ok ? "ok" : "bad"}>{step.ok ? "ok" : "fail"}</b>
+                </figcaption>
+                <a href={`/artifacts/runs/${manifest?.id}/${step.file}`} target="_blank" rel="noreferrer">
+                  <img src={`/artifacts/runs/${manifest?.id}/${step.file}`} alt={step.name} loading="lazy" />
+                </a>
+              </figure>
+            ))}
+          </div>
+
+          {log ? (
+            <details className="log-wrap" open={showLog || (!manifest && !isLive)} onToggle={(e) => setShowLog((e.target as HTMLDetailsElement).open)}>
+              <summary className="tiny">Process log</summary>
+              <pre className="log">{log}</pre>
+            </details>
+          ) : null}
         </section>
       </div>
     </>

@@ -2,11 +2,28 @@
   "id": "pf-001-buy-booster",
   "title": "PF-001 Profile open Buy Booster",
   "steps": [
-    { "action": "gotoDashboard" },
-    { "action": "dismiss", "target": "Skip" },
-    { "action": "seeText", "text": "Buy Booster" },
-    { "action": "tapText", "text": "Buy Booster" },
-    { "action": "checkpoint", "target": "booster-options-before-payment" },
-    { "action": "seeAny", "text": "Select Booster | Choose | Buy Now | Booster" }
+    {
+      "action": "gotoDashboard"
+    },
+    {
+      "action": "dismiss",
+      "target": "Skip"
+    },
+    {
+      "action": "seeText",
+      "text": "Buy Booster"
+    },
+    {
+      "action": "tapText",
+      "text": "Buy Booster"
+    },
+    {
+      "action": "checkpoint",
+      "target": "booster-options-before-payment"
+    },
+    {
+      "action": "seeAny",
+      "text": "Select Booster | Choose | Buy Now | Booster"
+    }
   ]
 }
