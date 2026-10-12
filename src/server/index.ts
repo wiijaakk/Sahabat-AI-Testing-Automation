@@ -11,6 +11,7 @@ import type { HarvestDump, VocabEntry } from "../framework/types.ts";
 import { harvestAssetPath } from "../framework/harvest-shots.ts";
 import { guessUnnamedIcons } from "../framework/vision.ts";
 import { loadVocab, saveVocab } from "../../vocab/screens.ts";
+import { buildPreviews } from "./previews.ts";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const runsDir = path.join(root, "artifacts", "runs");
@@ -176,6 +177,10 @@ app.get("/api/runs/:id", (req, res) => {
 
 app.get("/api/catalog", (_req, res) => {
   res.json({ entries: loadVocab() });
+});
+
+app.get("/api/catalog/previews", (_req, res) => {
+  res.json({ previews: buildPreviews(runsDir, loadVocab()) });
 });
 
 app.put("/api/catalog", (req, res) => {

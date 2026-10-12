@@ -5,6 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
+const api = `http://127.0.0.1:${process.env.OPERATOR_PORT ?? 8787}`;
 
 export default defineConfig({
   root: path.join(root, "src/operator"),
@@ -12,8 +13,8 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      "/api": "http://127.0.0.1:8787",
-      "/artifacts": "http://127.0.0.1:8787",
+      "/api": api,
+      "/artifacts": api,
     },
   },
   build: {

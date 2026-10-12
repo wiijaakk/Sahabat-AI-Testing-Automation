@@ -1,5 +1,6 @@
 import { BookMarked, History, ListChecks, LoaderCircle, LogIn, Monitor, Moon, RefreshCw, Sun } from "lucide-react";
 import iohLogo from "../assets/ioh-logo.svg";
+import iohLogoDark from "../assets/ioh-logo-dark.svg";
 import sahabatMark from "../assets/sahabat-ai-mark.png";
 import type { ThemePref } from "../lib/theme";
 import type { CurrentJob, View } from "../lib/types";
@@ -79,9 +80,10 @@ export function Sidebar(props: {
             target="_blank"
             rel="noreferrer"
             title="Indosat Ooredoo Hutchison"
-            className="shrink-0 rounded-lg px-1.5 py-1 dark:bg-white"
+            className="shrink-0 rounded-lg px-1.5 py-1"
           >
-            <img src={iohLogo} alt="Indosat Ooredoo Hutchison" className="h-7 w-auto" />
+            <img src={iohLogo} alt="Indosat Ooredoo Hutchison" className="h-7 w-auto dark:hidden" />
+            <img src={iohLogoDark} alt="Indosat Ooredoo Hutchison" className="hidden h-7 w-auto dark:block" />
           </a>
         </div>
       </div>

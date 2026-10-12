@@ -40,7 +40,7 @@ export type CaseStep = {
 
 export type TestCase = { id: string; title: string; steps: CaseStep[] };
 
-export type ManifestStep = { kind: string; name: string; ok: boolean; file: string; detail?: string; at?: string };
+export type ManifestStep = { kind: string; name: string; ok: boolean; file: string; detail?: string; box?: BBox; at?: string };
 
 export type Manifest = {
   id: string;
@@ -67,4 +67,16 @@ export type RunDetail = {
   job: { log: string; status: string } | null;
   manifest: Manifest | null;
   shots: string[];
+};
+
+/** Where a catalog control was last seen, from a run screenshot or the last scan. */
+export type ControlPreview = {
+  src: string;
+  width: number;
+  height: number;
+  box?: BBox;
+  point?: { x: number; y: number };
+  from: "run" | "scan";
+  runId?: string;
+  at?: string;
 };

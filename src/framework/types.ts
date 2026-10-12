@@ -101,6 +101,8 @@ export type EvidenceStep = {
   ok: boolean;
   file: string;
   detail?: string;
+  /** Where the control was found on this screenshot, in screenshot px. Lets the UI crop a preview. */
+  box?: BBox;
   at: string;
 };
 

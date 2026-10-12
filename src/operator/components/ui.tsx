@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { AlertTriangle, Info, X } from "lucide-react";
+import { AlertTriangle, CircleCheck, CircleDashed, CircleX, Info, LoaderCircle, X } from "lucide-react";
 import type { ReactNode } from "react";
 
 export function PageHeader(props: { title: string; lede?: ReactNode; actions?: ReactNode; summary?: ReactNode }) {
@@ -106,14 +106,26 @@ export function Chip(props: { tone?: "neutral" | "ok" | "bad" | "running" | "war
   );
 }
 
-export function StatusChip(props: { status: string | null | undefined; title?: string }) {
+/** Run status as an icon, optionally followed by a plain word. No pill, no dot. */
+export function StatusIcon(props: { status: string | null | undefined; className?: string; label?: boolean }) {
   const st = props.status ?? "";
-  const tone = st === "passed" ? "ok" : st === "failed" ? "bad" : st === "running" ? "running" : "neutral";
+  const word =
+    st === "passed" ? "Passed" : st === "failed" ? "Failed" : st === "running" ? "Running" : st === "stopped" ? "Stopped before finishing" : "No result";
+  const [Icon, tone] =
+    st === "passed"
+      ? [CircleCheck, "text-ok"]
+      : st === "failed"
+        ? [CircleX, "text-danger"]
+        : st === "running"
+          ? [LoaderCircle, "text-brand animate-spin"]
+          : [CircleDashed, "text-faint"];
+  const icon = <Icon className={`shrink-0 ${tone} ${props.className ?? "size-4"}`} strokeWidth={2.2} aria-label={props.label ? undefined : word} />;
+  if (!props.label) return <span title={word} className="inline-flex">{icon}</span>;
   return (
-    <Chip tone={tone} title={props.title}>
-      <span className={`dot ${tone === "ok" ? "bg-ok" : tone === "bad" ? "bg-danger" : tone === "running" ? "bg-brand" : "bg-faint"}`} />
-      {st || "no manifest"}
-    </Chip>
+    <span className="inline-flex items-center gap-1.5 font-semibold">
+      {icon}
+      <span className={tone.replace(" animate-spin", "")}>{word}</span>
+    </span>
   );
 }
 
