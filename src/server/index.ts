@@ -141,7 +141,7 @@ app.get("/api/status", (_req, res) => {
     profile: profileExists(),
     vision: Boolean(process.env.GEMINI_API_KEY),
     current,
-    lastRuns: listRuns().slice(0, 10),
+    lastRuns: listRuns().slice(0, 30),
   });
 });
 
@@ -152,13 +152,16 @@ app.get("/api/runs", (_req, res) => {
 app.get("/api/runs/:id", (req, res) => {
   const dir = path.join(runsDir, req.params.id);
   const manifestPath = path.join(dir, "manifest.json");
+  const logPath = path.join(dir, "playwright.log");
+  const inMemory = jobs.get(req.params.id);
+  // after a server restart the job map is empty, but the log is still on disk
+  const diskLog = fs.existsSync(logPath) ? fs.readFileSync(logPath, "utf8") : "";
   if (!fs.existsSync(manifestPath)) {
-    const job = jobs.get(req.params.id);
-    if (!job) {
+    if (!inMemory && !fs.existsSync(dir)) {
       res.status(404).json({ error: "run not found" });
       return;
     }
-    res.json({ job, manifest: null, shots: [] });
+    res.json({ job: inMemory ?? { log: diskLog, status: "failed" }, manifest: null, shots: [] });
     return;
   }
   const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
@@ -167,7 +170,8 @@ app.get("/api/runs/:id", (req, res) => {
     .filter((f) => f.endsWith(".png"))
     .sort()
     .map((file) => `/artifacts/runs/${req.params.id}/${file}`);
-  res.json({ job: jobs.get(req.params.id) ?? null, manifest, shots });
+  const job = inMemory ?? { log: diskLog, status: manifest.status };
+  res.json({ job, manifest, shots });
 });
 
 app.get("/api/catalog", (_req, res) => {
