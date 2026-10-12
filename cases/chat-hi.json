@@ -1,0 +1,29 @@
+{
+  "id": "chat-hi",
+  "title": "New Chat says hi",
+  "steps": [
+    {
+      "action": "gotoDashboard"
+    },
+    {
+      "action": "dismiss",
+      "target": "Skip"
+    },
+    {
+      "action": "tap",
+      "target": "New Chat"
+    },
+    {
+      "action": "type",
+      "target": "composer",
+      "text": "Say hi in one sentence."
+    },
+    {
+      "action": "press",
+      "key": "Enter"
+    },
+    {
+      "action": "waitReply"
+    }
+  ]
+}

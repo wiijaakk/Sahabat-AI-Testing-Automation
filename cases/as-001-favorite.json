@@ -1,0 +1,57 @@
+{
+  "id": "as-001-favorite",
+  "title": "AS-001 AI Storage add and remove favorite",
+  "steps": [
+    {
+      "action": "gotoDashboard"
+    },
+    {
+      "action": "dismiss",
+      "target": "Skip"
+    },
+    {
+      "action": "tap",
+      "target": "AIStorage"
+    },
+    {
+      "action": "tapText",
+      "text": "testing"
+    },
+    {
+      "action": "tap",
+      "target": "Project Menu"
+    },
+    {
+      "action": "checkpoint",
+      "target": "favorite-menu-open"
+    },
+    {
+      "action": "tap",
+      "target": "Favorite"
+    },
+    {
+      "action": "tap",
+      "target": "Project Menu"
+    },
+    {
+      "action": "see",
+      "target": "Remove Favorite"
+    },
+    {
+      "action": "tap",
+      "target": "Remove Favorite"
+    },
+    {
+      "action": "seeAny",
+      "text": "Removed from favorites successfully. | Removed from favourites successfully."
+    },
+    {
+      "action": "tap",
+      "target": "Project Menu"
+    },
+    {
+      "action": "see",
+      "target": "Favorite"
+    }
+  ]
+}

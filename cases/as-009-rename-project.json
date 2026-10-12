@@ -1,0 +1,86 @@
+{
+  "id": "as-009-rename-project",
+  "title": "AS-009 AI Storage rename project",
+  "steps": [
+    {
+      "action": "gotoDashboard"
+    },
+    {
+      "action": "dismiss",
+      "target": "Skip"
+    },
+    {
+      "action": "tap",
+      "target": "AIStorage"
+    },
+    {
+      "action": "tap",
+      "target": "Create Project"
+    },
+    {
+      "action": "type",
+      "target": "Project Name",
+      "text": "SANITY_A"
+    },
+    {
+      "action": "tap",
+      "target": "Create Project Confirm"
+    },
+    {
+      "action": "seeText",
+      "text": "SANITY_A"
+    },
+    {
+      "action": "tapText",
+      "text": "SANITY_A"
+    },
+    {
+      "action": "tap",
+      "target": "Project Menu"
+    },
+    {
+      "action": "checkpoint",
+      "target": "project-menu-open"
+    },
+    {
+      "action": "tap",
+      "target": "Edit Project"
+    },
+    {
+      "action": "checkpoint",
+      "target": "edit-project-open"
+    },
+    {
+      "action": "replace",
+      "target": "Project Name",
+      "text": "SANITY_AB"
+    },
+    {
+      "action": "tap",
+      "target": "Save Changes"
+    },
+    {
+      "action": "seeText",
+      "text": "SANITY_AB"
+    },
+    {
+      "action": "gotoDashboard"
+    },
+    {
+      "action": "dismiss",
+      "target": "Skip"
+    },
+    {
+      "action": "tap",
+      "target": "AIStorage"
+    },
+    {
+      "action": "seeText",
+      "text": "SANITY_AB"
+    },
+    {
+      "action": "notSeeText",
+      "text": "SANITY_A"
+    }
+  ]
+}

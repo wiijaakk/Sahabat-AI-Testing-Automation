@@ -1,0 +1,1 @@
+SANITY_DELETE_LIBRARY untuk sanity test Library. Aman dihapus.

@@ -1,0 +1,2 @@
+This disposable file is used by Sahabat AI storage sanity automation.
+Run purpose: verify that a successful upload is reflected in storage usage.

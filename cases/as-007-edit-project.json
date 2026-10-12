@@ -1,0 +1,94 @@
+{
+  "id": "as-007-edit-project",
+  "title": "AS-007 AI Storage edit project",
+  "steps": [
+    {
+      "action": "gotoDashboard"
+    },
+    {
+      "action": "dismiss",
+      "target": "Skip"
+    },
+    {
+      "action": "tap",
+      "target": "AIStorage"
+    },
+    {
+      "action": "tap",
+      "target": "Create Project"
+    },
+    {
+      "action": "type",
+      "target": "Project Name",
+      "text": "SANITY_E"
+    },
+    {
+      "action": "tap",
+      "target": "Create Project Confirm"
+    },
+    {
+      "action": "seeText",
+      "text": "SANITY_E"
+    },
+    {
+      "action": "tapText",
+      "text": "SANITY_E"
+    },
+    {
+      "action": "tap",
+      "target": "Project Menu"
+    },
+    {
+      "action": "checkpoint",
+      "target": "project-menu-open"
+    },
+    {
+      "action": "tap",
+      "target": "Edit Project"
+    },
+    {
+      "action": "checkpoint",
+      "target": "edit-project-open"
+    },
+    {
+      "action": "replace",
+      "target": "Project Description",
+      "text": "Edited by sanity automation SANITY_E"
+    },
+    {
+      "action": "tap",
+      "target": "Save Changes"
+    },
+    {
+      "action": "checkpoint",
+      "target": "edit-project-saved"
+    },
+    {
+      "action": "gotoDashboard"
+    },
+    {
+      "action": "dismiss",
+      "target": "Skip"
+    },
+    {
+      "action": "tap",
+      "target": "AIStorage"
+    },
+    {
+      "action": "tapText",
+      "text": "SANITY_E"
+    },
+    {
+      "action": "tap",
+      "target": "Project Menu"
+    },
+    {
+      "action": "tap",
+      "target": "Edit Project"
+    },
+    {
+      "action": "seeText",
+      "text": "Edited by sanity automation SANITY_E"
+    }
+  ]
+}
