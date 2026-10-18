@@ -166,14 +166,14 @@ function SessionCard(props: {
       {props.running && c ? (
         <button type="button" onClick={props.onOpen} className="flex items-center gap-2 text-left rounded-lg -mx-1 px-1 py-0.5 hover:bg-soft">
           <span className="dot bg-brand pulse-soft" />
-          <span className="text-muted">Running</span>
-          <b className="ml-auto font-semibold truncate max-w-[130px] text-brand-ink">{props.label}</b>
+          <span className="text-muted whitespace-nowrap">Running</span>
+          <b className="ml-auto font-semibold truncate min-w-0 text-brand-ink">{props.label}</b>
         </button>
       ) : c ? (
         <button type="button" onClick={props.onOpen} className="flex items-center gap-2 text-left rounded-lg -mx-1 px-1 py-0.5 hover:bg-soft">
           <span className={`dot ${c.status === "passed" ? "bg-ok" : "bg-danger"}`} />
-          <span className="text-muted">Last job</span>
-          <b className={`ml-auto font-semibold truncate max-w-[130px] ${c.status === "passed" ? "text-ok" : "text-danger"}`}>
+          <span className="text-muted whitespace-nowrap">Last job</span>
+          <b className={`ml-auto font-semibold truncate min-w-0 ${c.status === "passed" ? "text-ok" : "text-danger"}`}>
             {props.label} · {c.status}
           </b>
         </button>

@@ -41,7 +41,10 @@ export class SahabatDriver {
   ) {}
 
   static async create(page: Page, testName: string): Promise<SahabatDriver> {
-    return new SahabatDriver(page, new ArtifactSink(testName));
+    const sink = new ArtifactSink(testName);
+    // evidence PNGs at device scale; every locator still works on CSS-scale grabs
+    sink.hdShot = () => page.screenshot({ type: "png", scale: "device" });
+    return new SahabatDriver(page, sink);
   }
 
   async close() {
@@ -86,6 +89,23 @@ export class SahabatDriver {
 
   async waitForFlutter() {
     await waitForFlutterPaint(this.page);
+    await this.waitForBusyGone();
+  }
+
+  /** The "Processing" dialog hides the page from the a11y tree, so a tap during it falls back to a pin or misses. */
+  private async waitForBusyGone(timeoutMs = TEXT_MS) {
+    try {
+      await this.page.waitForFunction(
+        () =>
+          ![...document.querySelectorAll("flt-semantics")].some((el) =>
+            /please wait while we process/i.test(el.textContent ?? ""),
+          ),
+        undefined,
+        { timeout: timeoutMs, polling: 250 },
+      );
+    } catch {
+      // still busy after the timeout; let the step run and fail with its own evidence
+    }
   }
 
   private async grabPng(): Promise<Buffer> {
@@ -249,6 +269,7 @@ export class SahabatDriver {
   }
 
   async tap(name: string) {
+    await this.waitForFlutter();
     const entry = vocabByName(name);
     let hit: IndexedHit | undefined;
 

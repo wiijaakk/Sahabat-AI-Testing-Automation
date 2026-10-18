@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Sidebar } from "./components/Sidebar";
 import { Banner } from "./components/ui";
-import { json } from "./lib/api";
+import { json, jsonBody } from "./lib/api";
 import { useTheme } from "./lib/theme";
 import type { RunDetail, Status, View } from "./lib/types";
 import { CatalogView } from "./views/CatalogView";
@@ -73,11 +73,11 @@ export function App() {
     if (view !== "catalog") loadCatalogCount().catch(() => {});
   }, [view]);
 
-  async function post(path: string, kind: string, opts: { stay?: boolean } = {}) {
+  async function post(path: string, kind: string, opts: { stay?: boolean; body?: unknown } = {}) {
     setError(null);
     setBusy(kind);
     try {
-      const data = await json<{ id: string }>(path, { method: "POST" });
+      const data = await json<{ id: string }>(path, opts.body === undefined ? { method: "POST" } : jsonBody(opts.body));
       setSelected(data.id);
       if (!opts.stay) setView("runs");
     } catch (err) {
@@ -147,7 +147,7 @@ export function App() {
             running={running}
             busy={busy}
             vision={Boolean(status?.vision)}
-            onScan={() => post("/api/scan", "scan", { stay: true })}
+            onScan={(screens) => post("/api/scan", "scan", { stay: true, body: screens?.length ? { screens } : {} })}
             onError={setError}
             onCountChange={setCatalogCount}
             scanJob={current && current.kind === "scan" ? current : null}

@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { drawBoxes, fillRects } from "./draw-box.ts";
 import type { BBox, EvidenceKind, EvidenceStep, RunManifest } from "./types.ts";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -57,6 +58,17 @@ export function displayRunName(opts: {
   return opts.id;
 }
 
+/** SAHABAT_REDACT="x,y,w,h;x,y,w,h" in page CSS px: areas painted over in every saved screenshot (phone number, email). */
+function redactRects(): BBox[] {
+  const raw = process.env.SAHABAT_REDACT?.trim();
+  if (!raw) return [];
+  return raw
+    .split(";")
+    .map((part) => part.split(",").map(Number))
+    .filter((n) => n.length === 4 && n.every((v) => Number.isFinite(v)))
+    .map(([x, y, width, height]) => ({ x, y, width, height }));
+}
+
 function roundBox(box: BBox): BBox {
   return { x: Math.round(box.x), y: Math.round(box.y), width: Math.round(box.width), height: Math.round(box.height) };
 }
@@ -65,6 +77,8 @@ export class ArtifactSink {
   readonly dir: string;
   readonly manifest: RunManifest;
   private n = 0;
+  /** Optional device-scale grab. When set, saved PNGs are re-taken sharper and boxes are scaled to match. */
+  hdShot: (() => Promise<Buffer>) | null = null;
 
   constructor(testName: string) {
     const id = process.env.SAHABAT_RUN_ID ?? makeRunId(testName);
@@ -92,6 +106,28 @@ export class ArtifactSink {
   async saveShot(kind: EvidenceKind, name: string, png: Buffer, ok: boolean, detail?: string, box?: BBox): Promise<EvidenceStep> {
     this.n += 1;
     const file = `${String(this.n).padStart(2, "0")}-${kind}-${slug(name, "shot")}.png`;
+    let k = 1;
+    if (this.hdShot) {
+      try {
+        const hd = await this.hdShot();
+        k = hd.readUInt32BE(16) / png.readUInt32BE(16);
+        if (k > 1.01) {
+          if (box) box = { x: box.x * k, y: box.y * k, width: box.width * k, height: box.height * k };
+          png = box ? drawBoxes(hd, [box], ok, Math.round(2 * k)) : hd;
+        } else {
+          k = 1;
+        }
+      } catch {
+        k = 1;
+      }
+    }
+    const redact = redactRects();
+    if (redact.length) {
+      png = fillRects(
+        png,
+        redact.map((r) => ({ x: r.x * k, y: r.y * k, width: r.width * k, height: r.height * k })),
+      );
+    }
     fs.writeFileSync(path.join(this.dir, file), png);
     const step: EvidenceStep = {
       kind,

@@ -14,31 +14,31 @@ function put(png: PNG, x: number, y: number, r: number, g: number, b: number, a:
   png.data[i + 3] = a;
 }
 
-function hline(png: PNG, x0: number, x1: number, y: number, color: [number, number, number]) {
+function hline(png: PNG, x0: number, x1: number, y: number, color: [number, number, number], thick: number) {
   const xStart = Math.max(0, Math.min(x0, x1));
   const xEnd = Math.min(png.width - 1, Math.max(x0, x1));
   for (let x = xStart; x <= xEnd; x++) {
-    for (let t = -2; t <= 2; t++) put(png, x, y + t, color[0], color[1], color[2], 255);
+    for (let t = -thick; t <= thick; t++) put(png, x, y + t, color[0], color[1], color[2], 255);
   }
 }
 
-function vline(png: PNG, y0: number, y1: number, x: number, color: [number, number, number]) {
+function vline(png: PNG, y0: number, y1: number, x: number, color: [number, number, number], thick: number) {
   const yStart = Math.max(0, Math.min(y0, y1));
   const yEnd = Math.min(png.height - 1, Math.max(y0, y1));
   for (let y = yStart; y <= yEnd; y++) {
-    for (let t = -2; t <= 2; t++) put(png, x + t, y, color[0], color[1], color[2], 255);
+    for (let t = -thick; t <= thick; t++) put(png, x + t, y, color[0], color[1], color[2], 255);
   }
 }
 
-function stroke(img: PNG, box: BBox, color: [number, number, number]) {
+function stroke(img: PNG, box: BBox, color: [number, number, number], thick: number) {
   const x0 = Math.round(box.x);
   const y0 = Math.round(box.y);
   const x1 = Math.round(box.x + box.width);
   const y1 = Math.round(box.y + box.height);
-  hline(img, x0, x1, y0, color);
-  hline(img, x0, x1, y1, color);
-  vline(img, y0, y1, x0, color);
-  vline(img, y0, y1, x1, color);
+  hline(img, x0, x1, y0, color, thick);
+  hline(img, x0, x1, y1, color, thick);
+  vline(img, y0, y1, x0, color, thick);
+  vline(img, y0, y1, x1, color, thick);
 }
 
 /** Draw a fat magenta box so the gallery is actually readable. */
@@ -46,10 +46,10 @@ export function drawBox(png: Buffer, box: BBox, ok: boolean): Buffer {
   return drawBoxes(png, [box], ok);
 }
 
-export function drawBoxes(png: Buffer, boxes: BBox[], ok: boolean): Buffer {
+export function drawBoxes(png: Buffer, boxes: BBox[], ok: boolean, thick = 2): Buffer {
   const img = parse(png);
   const color: [number, number, number] = ok ? [226, 0, 116] : [180, 32, 32];
-  for (const box of boxes) stroke(img, box, color);
+  for (const box of boxes) stroke(img, box, color, thick);
   return Buffer.from(PNG.sync.write(img));
 }
 
@@ -79,4 +79,17 @@ export function cropMarked(png: Buffer, box: BBox, pad = 56): Buffer {
     },
     true,
   );
+}
+
+/** Paint solid rectangles over the PNG, for account details that must not land in shared evidence. */
+export function fillRects(png: Buffer, rects: BBox[], color: [number, number, number] = [255, 255, 255]): Buffer {
+  const img = parse(png);
+  for (const r of rects) {
+    const x0 = Math.max(0, Math.round(r.x));
+    const y0 = Math.max(0, Math.round(r.y));
+    const x1 = Math.min(img.width, Math.round(r.x + r.width));
+    const y1 = Math.min(img.height, Math.round(r.y + r.height));
+    for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) put(img, x, y, color[0], color[1], color[2], 255);
+  }
+  return Buffer.from(PNG.sync.write(img));
 }

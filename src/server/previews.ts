@@ -14,6 +14,8 @@ export type ControlPreview = {
   from: "run" | "scan";
   runId?: string;
   at?: string;
+  /** Scan plan screen id the preview came from. */
+  screen?: string;
 };
 
 const SHOT_KINDS = new Set(["tap", "see", "type"]);
@@ -81,27 +83,36 @@ export function buildPreviews(runsDir: string, entries: VocabEntry[]): Record<st
   if (fs.existsSync(HARVEST_FILE)) {
     try {
       const harvest = JSON.parse(fs.readFileSync(HARVEST_FILE, "utf8")) as HarvestDump;
-      const screen = harvest.screen ? path.join(HARVEST_DIR, harvest.screen) : "";
-      const size = screen ? pngSize(screen) : null;
-      if (size) {
-        const viewport = harvest.viewport ?? { width: size.width, height: size.height };
-        for (const entry of entries) {
-          if (out[entry.name]) continue;
+      const screens = (harvest.screens ?? []).filter((s) => s.status === "ok" && s.screen);
+      for (const entry of entries) {
+        if (out[entry.name]) continue;
+        // screens the catalog tagged first, so the preview shows the control where the case will tap it
+        const tagged = entry.screens ?? [];
+        const ordered = [...screens].sort(
+          (a, b) => (tagged.indexOf(a.id) + 1 || 99) - (tagged.indexOf(b.id) + 1 || 99),
+        );
+        for (const screen of ordered) {
+          const file = path.join(HARVEST_DIR, screen.screen!);
+          const size = pngSize(file);
+          if (!size) continue;
+          const viewport = harvest.viewport ?? { width: size.width, height: size.height };
           // a pinned box alone is not proof: it may belong to another screen, so the scan must find the control
           let box: BBox | undefined;
           try {
-            box = matchEntry(entry, harvest.nodes, viewport)?.bbox;
+            box = matchEntry(entry, screen.nodes, viewport)?.bbox;
           } catch {
             box = undefined;
           }
           if (!box) continue;
           out[entry.name] = {
-            src: `/artifacts/harvest/${harvest.screen}?t=${encodeURIComponent(harvest.at)}`,
+            src: `/artifacts/harvest/${screen.screen}?t=${encodeURIComponent(harvest.at)}`,
             ...size,
             box,
             from: "scan",
             at: harvest.at,
+            screen: screen.id,
           };
+          break;
         }
       }
     } catch {

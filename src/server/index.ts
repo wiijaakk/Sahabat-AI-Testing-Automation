@@ -10,6 +10,7 @@ import { profileExists } from "../framework/profile.ts";
 import type { HarvestDump, VocabEntry } from "../framework/types.ts";
 import { harvestAssetPath } from "../framework/harvest-shots.ts";
 import { guessUnnamedIcons } from "../framework/vision.ts";
+import { loadScanPlan, renderPlan } from "../framework/scan-plan.ts";
 import { loadVocab, saveVocab } from "../../vocab/screens.ts";
 import { buildPreviews } from "./previews.ts";
 
@@ -194,6 +195,10 @@ app.put("/api/catalog", (req, res) => {
       res.status(400).json({ error: "each entry needs name + text[]" });
       return;
     }
+    if (e.screens !== undefined && !Array.isArray(e.screens)) {
+      res.status(400).json({ error: "screens must be a list of screen ids" });
+      return;
+    }
   }
   saveVocab(entries);
   res.json({ entries: loadVocab() });
@@ -204,7 +209,21 @@ app.get("/api/harvest", (_req, res) => {
     res.json({ harvest: null });
     return;
   }
-  res.json({ harvest: JSON.parse(fs.readFileSync(HARVEST_FILE, "utf8")) });
+  const raw = JSON.parse(fs.readFileSync(HARVEST_FILE, "utf8")) as Partial<HarvestDump> & { nodes?: unknown };
+  // a scan from before screens existed has top-level nodes; show nothing rather than a broken page
+  if (!Array.isArray(raw.screens)) {
+    res.json({ harvest: null });
+    return;
+  }
+  res.json({ harvest: raw });
+});
+
+app.get("/api/scan-plan", (_req, res) => {
+  try {
+    res.json({ plan: renderPlan(loadScanPlan()) });
+  } catch (err) {
+    res.status(500).json({ error: String(err) });
+  }
 });
 
 app.post("/api/vision/guess-unnamed", async (req, res) => {
@@ -219,7 +238,10 @@ app.post("/api/vision/guess-unnamed", async (req, res) => {
     }
     const harvest = JSON.parse(fs.readFileSync(HARVEST_FILE, "utf8")) as HarvestDump;
     const nodeId = typeof req.body?.nodeId === "string" ? req.body.nodeId : "";
-    let targets = harvest.nodes.filter((n) => n.unnamed && n.crop);
+    const screenId = typeof req.body?.screen === "string" ? req.body.screen : "";
+    const screens = (harvest.screens ?? []).filter((s) => !screenId || s.id === screenId);
+    // flutter reuses node ids across screens, so the screen narrows the lookup
+    let targets = screens.flatMap((s) => s.nodes).filter((n) => n.unnamed && n.crop);
     if (nodeId) targets = targets.filter((n) => n.id === nodeId);
     if (targets.length === 0) {
       res.status(400).json({ error: "No unnamed crops to guess. Scan again." });
@@ -306,9 +328,17 @@ app.post("/api/run", (_req, res) => {
   }
 });
 
-app.post("/api/scan", (_req, res) => {
+app.post("/api/scan", (req, res) => {
   try {
-    const job = spawnJob("scan", ["tsx", "src/runner/scan.ts"]);
+    if (!profileExists()) {
+      res.status(400).json({ error: "No Chrome profile yet. Click Save login first." });
+      return;
+    }
+    // optional subset, e.g. { screens: ["library"] } to rescan one page after pinning a menu button
+    const only = Array.isArray(req.body?.screens)
+      ? (req.body.screens as unknown[]).filter((s): s is string => typeof s === "string" && /^[a-z0-9-]+$/.test(s))
+      : [];
+    const job = spawnJob("scan", ["tsx", "src/runner/scan.ts", ...only]);
     res.json(job);
   } catch (err) {
     res.status(409).json({ error: String(err) });

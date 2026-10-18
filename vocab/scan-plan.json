@@ -1,0 +1,245 @@
+{
+  "fixtures": {
+    "project": "SANITY_SCAN_PROJECT",
+    "projectFile": "SANITY_SCAN_FILE",
+    "upload": "SANITY_SCAN_UPLOAD",
+    "creation": "SANITY-SCAN-CREATION"
+  },
+  "screens": [
+    {
+      "id": "dashboard",
+      "page": "Dashboard",
+      "steps": []
+    },
+    {
+      "id": "new-chat",
+      "page": "New Chat",
+      "steps": [
+        {
+          "action": "tap",
+          "target": "New Chat"
+        }
+      ]
+    },
+    {
+      "id": "library",
+      "page": "Library",
+      "state": "AI Creations",
+      "steps": [
+        {
+          "action": "tap",
+          "target": "Library"
+        }
+      ]
+    },
+    {
+      "id": "library-creation",
+      "page": "Library",
+      "state": "AI creation open",
+      "needs": "An AI creation named {{creation}} under Library › AI Creations. The scan-setup case asks the chat for it; the product turns underscores into hyphens, so the plan name uses hyphens.",
+      "steps": [
+        {
+          "action": "tap",
+          "target": "Library"
+        },
+        {
+          "action": "tap",
+          "target": "AI Creations"
+        },
+        {
+          "action": "tapText",
+          "text": "{{creation}}"
+        }
+      ]
+    },
+    {
+      "id": "library-your-uploads",
+      "page": "Library",
+      "state": "Your Uploads",
+      "steps": [
+        {
+          "action": "tap",
+          "target": "Library"
+        },
+        {
+          "action": "tap",
+          "target": "Your Uploads"
+        }
+      ]
+    },
+    {
+      "id": "library-asset",
+      "page": "Library",
+      "state": "upload open",
+      "needs": "An upload named {{upload}} under Library › Your Uploads.",
+      "steps": [
+        {
+          "action": "tap",
+          "target": "Library"
+        },
+        {
+          "action": "tap",
+          "target": "Your Uploads"
+        },
+        {
+          "action": "tapText",
+          "text": "{{upload}}"
+        }
+      ]
+    },
+    {
+      "id": "library-asset-menu",
+      "page": "Library",
+      "state": "upload menu",
+      "needs": "An upload named {{upload}} under Library › Your Uploads, and Asset Menu pinned from the upload-open screen.",
+      "steps": [
+        {
+          "action": "tap",
+          "target": "Library"
+        },
+        {
+          "action": "tap",
+          "target": "Your Uploads"
+        },
+        {
+          "action": "tapText",
+          "text": "{{upload}}"
+        },
+        {
+          "action": "tap",
+          "target": "Asset Menu"
+        }
+      ]
+    },
+    {
+      "id": "aistorage",
+      "page": "AiStorage",
+      "steps": [
+        {
+          "action": "tap",
+          "target": "AIStorage"
+        }
+      ],
+      "state": "Projects"
+    },
+    {
+      "id": "aistorage-create-project",
+      "page": "AiStorage",
+      "state": "Create Project dialog",
+      "steps": [
+        {
+          "action": "tap",
+          "target": "AIStorage"
+        },
+        {
+          "action": "tap",
+          "target": "Create Project"
+        }
+      ]
+    },
+    {
+      "id": "aistorage-project",
+      "page": "AiStorage",
+      "state": "project open",
+      "needs": "A project named {{project}} in AiStorage.",
+      "steps": [
+        {
+          "action": "tap",
+          "target": "AIStorage"
+        },
+        {
+          "action": "tapText",
+          "text": "{{project}}"
+        }
+      ]
+    },
+    {
+      "id": "aistorage-project-menu",
+      "page": "AiStorage",
+      "state": "project menu",
+      "needs": "A project named {{project}} in AiStorage.",
+      "steps": [
+        {
+          "action": "tap",
+          "target": "AIStorage"
+        },
+        {
+          "action": "tapText",
+          "text": "{{project}}"
+        },
+        {
+          "action": "tap",
+          "target": "Project Menu"
+        }
+      ]
+    },
+    {
+      "id": "aistorage-edit-project",
+      "page": "AiStorage",
+      "state": "Edit Project dialog",
+      "needs": "A project named {{project}} in AiStorage.",
+      "steps": [
+        {
+          "action": "tap",
+          "target": "AIStorage"
+        },
+        {
+          "action": "tapText",
+          "text": "{{project}}"
+        },
+        {
+          "action": "tap",
+          "target": "Project Menu"
+        },
+        {
+          "action": "tap",
+          "target": "Edit Project"
+        }
+      ]
+    },
+    {
+      "id": "aistorage-upload",
+      "page": "AiStorage",
+      "state": "Add Files sheet",
+      "needs": "A project named {{project}} in AiStorage.",
+      "steps": [
+        {
+          "action": "tap",
+          "target": "AIStorage"
+        },
+        {
+          "action": "tapText",
+          "text": "{{project}}"
+        },
+        {
+          "action": "tap",
+          "target": "Upload Files"
+        }
+      ]
+    },
+    {
+      "id": "aistorage-file-menu",
+      "page": "AiStorage",
+      "state": "file menu",
+      "needs": "A file named {{projectFile}} uploaded inside the {{project}} project.",
+      "steps": [
+        {
+          "action": "tap",
+          "target": "AIStorage"
+        },
+        {
+          "action": "tapText",
+          "text": "{{project}}"
+        },
+        {
+          "action": "seeText",
+          "text": "{{projectFile}}"
+        },
+        {
+          "action": "tap",
+          "target": "File Menu"
+        }
+      ]
+    }
+  ]
+}

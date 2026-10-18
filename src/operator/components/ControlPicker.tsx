@@ -29,8 +29,20 @@ function kindOf(e: VocabEntry): { label: string; icon: LucideIcon } {
   return { label: "Button", icon: MousePointerClick };
 }
 
+/** Scan plan screen id prefix → product area, so a scanned control groups by where it lives. */
+const SCREEN_AREA: [string, string][] = [
+  ["library", "Library"],
+  ["aistorage", "AI Storage"],
+  ["new-chat", "Chat"],
+  ["dashboard", "Dashboard"],
+];
+
 function areaOf(e: VocabEntry, usedIn: string[]): string {
   if (e.hint && HINT_AREA[e.hint]) return HINT_AREA[e.hint];
+  // the page-specific screen wins over the dashboard, which every nav button is on too
+  for (const [prefix, area] of SCREEN_AREA) {
+    if (e.screens?.some((id) => id.startsWith(prefix))) return area;
+  }
   const counts = new Map<string, number>();
   for (const id of usedIn) {
     const area = AREA_BY_PREFIX[id.split("-")[0]];
@@ -41,7 +53,7 @@ function areaOf(e: VocabEntry, usedIn: string[]): string {
   return usedIn.length ? "Other screens" : "Not used by any case yet";
 }
 
-const AREA_ORDER = ["Sidebar", "Header", "Chat composer", "Library", "AI Storage", "Profile and plans", "Banners", "Footer", "Other screens", "Not used by any case yet"];
+const AREA_ORDER = ["Sidebar", "Header", "Chat composer", "Chat", "Library", "AI Storage", "Dashboard", "Profile and plans", "Banners", "Footer", "Other screens", "Not used by any case yet"];
 
 type Group = { title: string; items: VocabEntry[] };
 

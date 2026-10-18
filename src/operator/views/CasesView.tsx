@@ -1,8 +1,9 @@
 import { ArrowDown, ArrowUp, Copy, ListChecks, LoaderCircle, Play, Plus, Save, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { ActionPicker } from "../components/ActionPicker";
 import { ControlPicker, type ControlUsage } from "../components/ControlPicker";
 import { Chip, EmptyState, PageHeader, SectionTitle, Summary } from "../components/ui";
-import { ACTIONS, ACTION_META, FAMILY_STYLE, metaOf, needsControl, needsText, stepForAction, TEMPLATE_HINT } from "../lib/actions";
+import { FAMILY_STYLE, metaOf, needsControl, needsText, stepForAction, TEMPLATE_HINT } from "../lib/actions";
 import { json, jsonBody } from "../lib/api";
 import type { CaseStep, ControlPreview, RunListItem, TestCase, VocabEntry } from "../lib/types";
 
@@ -357,19 +358,7 @@ export function CasesView(props: {
                       </div>
                       <div className="flex-1 min-w-0 grid gap-2">
                         <div className="flex flex-wrap items-center gap-2">
-                          <select
-                            className="input w-[190px] font-semibold"
-                            aria-label="Action"
-                            value={step.action}
-                            title={meta.hint}
-                            onChange={(e) => setStep(i, stepForAction(e.target.value, step, names))}
-                          >
-                            {ACTIONS.map((a) => (
-                              <option key={a} value={a}>
-                                {ACTION_META[a].label}
-                              </option>
-                            ))}
-                          </select>
+                          <ActionPicker value={step.action} onChange={(a) => setStep(i, stepForAction(a, step, names))} />
                           {payload ? (
                             <>
                               <span className="text-[12.5px] text-muted">{joiner(step.action)}</span>

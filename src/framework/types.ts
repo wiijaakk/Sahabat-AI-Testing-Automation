@@ -28,6 +28,10 @@ export type VocabEntry = {
   hint?: ControlHint;
   /** Last scan box. Lets us re-find unnamed icons without calling vision every tap. */
   bbox?: BBox;
+  /** Scan plan screen ids where this control was seen or pinned, e.g. ["library", "library-your-uploads"]. */
+  screens?: string[];
+  /** "scan" when a scan added it from a labeled control; absent when a human added it. */
+  source?: "scan";
 };
 
 export type HarvestNode = {
@@ -42,13 +46,28 @@ export type HarvestNode = {
   crop?: string;
 };
 
-export type HarvestDump = {
-  at: string;
-  url: string;
-  viewport: { width: number; height: number };
+/** One screen from the scan plan, harvested or skipped. Files are relative to artifacts/harvest/. */
+export type HarvestScreen = {
+  id: string;
+  title: string;
+  /** Page and state from the scan plan, so the UI can group states under one page tab. */
+  page?: string;
+  state?: string;
+  status: "ok" | "skipped";
+  /** Why the scan could not reach this screen (a tap that missed, usually a missing fixture). */
+  reason?: string;
+  /** Account state the screen needs, copied from the plan so the UI can say what to set up. */
+  needs?: string;
+  url?: string;
   screen?: string;
   overview?: string;
   nodes: HarvestNode[];
+};
+
+export type HarvestDump = {
+  at: string;
+  viewport: { width: number; height: number };
+  screens: HarvestScreen[];
 };
 
 export type CaseAction =

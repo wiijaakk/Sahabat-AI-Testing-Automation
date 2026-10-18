@@ -2,11 +2,11 @@ import type { BBox, ControlHint, HarvestNode, VocabEntry } from "./types.ts";
 
 export type Viewport = { width: number; height: number };
 
-function norm(s: string): string {
+export function norm(s: string): string {
   return s.toLowerCase().replace(/\s+/g, " ").trim();
 }
 
-function aliases(entry: VocabEntry): string[] {
+export function aliases(entry: VocabEntry): string[] {
   return [entry.name, ...entry.text].map(norm).filter(Boolean);
 }
 
@@ -59,7 +59,7 @@ function center(box: BBox) {
   return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 }
 
-function dist(a: BBox, b: BBox): number {
+export function dist(a: BBox, b: BBox): number {
   const ac = center(a);
   const bc = center(b);
   return Math.hypot(ac.x - bc.x, ac.y - bc.y);
@@ -81,7 +81,11 @@ function matchUnnamedByBox(
   let cands = nodes.filter((n) => n.unnamed && sameRole(entry, n));
   if (entry.hint) cands = cands.filter((n) => inHint(n, entry.hint!, viewport));
   if (cands.length === 0) return null;
-  cands.sort((a, b) => dist(a.bbox, saved) - dist(b.bbox, saved));
+  // Distance plus a size penalty: a dialog's title and description fields sit 90px apart, and when
+  // the dialog shifts the wrong one can be nearer. Same width and height still wins then.
+  const score = (n: HarvestNode) =>
+    dist(n.bbox, saved) + Math.abs(n.bbox.width - saved.width) + Math.abs(n.bbox.height - saved.height);
+  cands.sort((a, b) => score(a) - score(b));
   const best = cands[0];
   if (dist(best.bbox, saved) > 96) return null;
   return best;

@@ -4,7 +4,7 @@ import { listCases } from "../src/framework/cases.ts";
 test("AI Storage, Library, and Profile have all assigned cases", () => {
   const ids = listCases().map((item) => item.id);
   expect(ids.filter((id) => id.startsWith("as-"))).toHaveLength(9);
-  expect(ids.filter((id) => id.startsWith("lb-"))).toHaveLength(6);
+  expect(ids.filter((id) => id.startsWith("lb-"))).toHaveLength(7);
   expect(ids.filter((id) => id.startsWith("pf-"))).toHaveLength(4);
 });
 

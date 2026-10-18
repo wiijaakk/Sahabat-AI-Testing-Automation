@@ -10,6 +10,9 @@ export type VocabEntry = {
   unnamed?: boolean;
   hint?: string;
   bbox?: BBox;
+  /** Scan plan screen ids this control was seen or pinned on. */
+  screens?: string[];
+  source?: "scan";
 };
 
 export type HarvestNode = {
@@ -22,14 +25,28 @@ export type HarvestNode = {
   crop?: string;
 };
 
-export type Harvest = {
-  at: string;
-  url: string;
-  viewport?: { width: number; height: number };
+export type HarvestScreen = {
+  id: string;
+  title: string;
+  page?: string;
+  state?: string;
+  status: "ok" | "skipped";
+  reason?: string;
+  needs?: string;
+  url?: string;
   screen?: string;
   overview?: string;
   nodes: HarvestNode[];
 };
+
+export type Harvest = {
+  at: string;
+  viewport?: { width: number; height: number };
+  screens: HarvestScreen[];
+};
+
+export type ScanScreenDef = { id: string; page: string; state?: string; title: string; needs?: string; steps: CaseStep[] };
+export type ScanPlan = { fixtures: Record<string, string>; screens: ScanScreenDef[] };
 
 export type CaseStep = {
   action: string;
@@ -79,4 +96,5 @@ export type ControlPreview = {
   from: "run" | "scan";
   runId?: string;
   at?: string;
+  screen?: string;
 };

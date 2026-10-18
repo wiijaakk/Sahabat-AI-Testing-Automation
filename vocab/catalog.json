@@ -6,7 +6,14 @@
     ],
     "role": "button",
     "hint": "sidebar",
-    "expectPath": "mylibrary"
+    "expectPath": "mylibrary",
+    "screens": [
+      "dashboard",
+      "new-chat",
+      "library",
+      "aistorage",
+      "library-your-uploads"
+    ]
   },
   {
     "name": "AI Creations",
@@ -14,14 +21,22 @@
       "AI Creations",
       "Al Creations"
     ],
-    "role": "button"
+    "role": "button",
+    "screens": [
+      "library",
+      "library-your-uploads"
+    ]
   },
   {
     "name": "Your Uploads",
     "text": [
       "Your Uploads"
     ],
-    "role": "button"
+    "role": "button",
+    "screens": [
+      "library",
+      "library-your-uploads"
+    ]
   },
   {
     "name": "New Chat",
@@ -29,7 +44,14 @@
       "New Chat"
     ],
     "role": "button",
-    "hint": "sidebar"
+    "hint": "sidebar",
+    "screens": [
+      "dashboard",
+      "new-chat",
+      "library",
+      "aistorage",
+      "library-your-uploads"
+    ]
   },
   {
     "name": "Skip",
@@ -46,7 +68,14 @@
       "AI Storage"
     ],
     "role": "button",
-    "hint": "sidebar"
+    "hint": "sidebar",
+    "screens": [
+      "dashboard",
+      "new-chat",
+      "library",
+      "aistorage",
+      "library-your-uploads"
+    ]
   },
   {
     "name": "Help Center",
@@ -54,14 +83,28 @@
       "Help Center"
     ],
     "role": "button",
-    "hint": "sidebar"
+    "hint": "sidebar",
+    "screens": [
+      "dashboard",
+      "new-chat",
+      "library",
+      "aistorage",
+      "library-your-uploads"
+    ]
   },
   {
     "name": "Search chats",
     "text": [
       "Search chats"
     ],
-    "role": "button"
+    "role": "button",
+    "screens": [
+      "dashboard",
+      "new-chat",
+      "library",
+      "aistorage",
+      "library-your-uploads"
+    ]
   },
   {
     "name": "Go Pro",
@@ -75,7 +118,10 @@
     "text": [
       "Create New"
     ],
-    "role": "button"
+    "role": "button",
+    "screens": [
+      "aistorage"
+    ]
   },
   {
     "name": "Login",
@@ -92,7 +138,11 @@
       "Ask me"
     ],
     "role": "textbox",
-    "hint": "composer"
+    "hint": "composer",
+    "screens": [
+      "dashboard",
+      "new-chat"
+    ]
   },
   {
     "name": "send",
@@ -101,7 +151,8 @@
     ],
     "role": "button",
     "unnamed": true,
-    "hint": "composer"
+    "hint": "composer",
+    "screens": []
   },
   {
     "name": "mic",
@@ -116,7 +167,11 @@
       "y": 540,
       "width": 34,
       "height": 34
-    }
+    },
+    "screens": [
+      "dashboard",
+      "new-chat"
+    ]
   },
   {
     "name": "exit",
@@ -131,7 +186,11 @@
       "y": 755,
       "width": 16,
       "height": 16
-    }
+    },
+    "screens": [
+      "dashboard",
+      "new-chat"
+    ]
   },
   {
     "name": "add",
@@ -146,7 +205,416 @@
       "y": 541,
       "width": 32,
       "height": 32
+    },
+    "screens": [
+      "dashboard",
+      "new-chat"
+    ]
+  },
+  {
+    "name": "Terms & Conditions",
+    "text": [
+      "Terms & Conditions"
+    ],
+    "role": "button",
+    "unnamed": false,
+    "hint": "footer",
+    "screens": [
+      "dashboard",
+      "new-chat"
+    ]
+  },
+  {
+    "name": "Storage Usage",
+    "text": [
+      "Storage Usage",
+      "Total Storage",
+      "Storage used",
+      "Used Storage"
+    ],
+    "role": "button"
+  },
+  {
+    "name": "Create Project",
+    "text": [
+      "Create Project",
+      "New Project",
+      "Create New"
+    ],
+    "role": "button",
+    "screens": [
+      "aistorage"
+    ]
+  },
+  {
+    "name": "Project Name",
+    "text": [
+      "Project Name",
+      "Project name",
+      "Project Title",
+      "Enter title",
+      "Title",
+      "Name"
+    ],
+    "role": "textbox",
+    "unnamed": true,
+    "bbox": {
+      "x": 579.5,
+      "y": 364,
+      "width": 229,
+      "height": 20
+    },
+    "screens": [
+      "aistorage-create-project"
+    ]
+  },
+  {
+    "name": "Project Description",
+    "text": [
+      "Project Description",
+      "Description"
+    ],
+    "role": "textbox",
+    "unnamed": true,
+    "bbox": {
+      "x": 577.5,
+      "y": 452,
+      "width": 285,
+      "height": 20
+    },
+    "screens": [
+      "aistorage-create-project"
+    ]
+  },
+  {
+    "name": "Create Project Confirm",
+    "text": [
+      "Create",
+      "Save Project"
+    ],
+    "role": "button"
+  },
+  {
+    "name": "Upload Files",
+    "text": [
+      "Upload Files",
+      "Upload File",
+      "Upload",
+      "Add Files"
+    ],
+    "role": "button"
+  },
+  {
+    "name": "Add Files Photos",
+    "text": [
+      "Add files & photos",
+      "Add files and photos"
+    ],
+    "role": "button"
+  },
+  {
+    "name": "File Menu",
+    "text": [
+      "File Menu",
+      "More"
+    ],
+    "role": "button",
+    "unnamed": true,
+    "bbox": {
+      "x": 963.5,
+      "y": 178,
+      "width": 22,
+      "height": 22
+    },
+    "screens": []
+  },
+  {
+    "name": "Close Modal",
+    "text": [
+      "Close",
+      "X"
+    ],
+    "role": "button",
+    "unnamed": true,
+    "bbox": {
+      "x": 1006.5,
+      "y": 50,
+      "width": 33,
+      "height": 33
     }
+  },
+  {
+    "name": "Project Menu",
+    "text": [
+      "Project Menu",
+      "More options",
+      "More"
+    ],
+    "role": "button",
+    "unnamed": true,
+    "bbox": {
+      "x": 1179,
+      "y": 107,
+      "width": 28,
+      "height": 28
+    }
+  },
+  {
+    "name": "Favorite",
+    "text": [
+      "Favorite",
+      "Favourite",
+      "Add to Favorite",
+      "Add to Favourite"
+    ],
+    "role": "button"
+  },
+  {
+    "name": "Remove Favorite",
+    "text": [
+      "Remove Favorite",
+      "Remove Favourite",
+      "Remove from Favorite",
+      "Remove from Favourite",
+      "Unfavorite"
+    ],
+    "role": "button"
+  },
+  {
+    "name": "Ask AI",
+    "text": [
+      "Ask AI",
+      "Chat with File",
+      "Chat"
+    ],
+    "role": "button"
+  },
+  {
+    "name": "Delete File",
+    "text": [
+      "Delete File",
+      "Remove File",
+      "Delete"
+    ],
+    "role": "button"
+  },
+  {
+    "name": "Delete Project",
+    "text": [
+      "Delete Project",
+      "Remove Project",
+      "Delete"
+    ],
+    "role": "button"
+  },
+  {
+    "name": "Confirm Delete",
+    "text": [
+      "Confirm Delete",
+      "Yes, Delete",
+      "Delete"
+    ],
+    "role": "button"
+  },
+  {
+    "name": "Edit Project",
+    "text": [
+      "Edit Project",
+      "Edit"
+    ],
+    "role": "button"
+  },
+  {
+    "name": "Rename Project",
+    "text": [
+      "Rename Project",
+      "Rename"
+    ],
+    "role": "button"
+  },
+  {
+    "name": "Save Changes",
+    "text": [
+      "Save Changes",
+      "Save",
+      "Update"
+    ],
+    "role": "button"
+  },
+  {
+    "name": "Library Filter",
+    "text": [
+      "Filter",
+      "Filters"
+    ],
+    "role": "button"
+  },
+  {
+    "name": "All Library Items",
+    "text": [
+      "All",
+      "All Items"
+    ],
+    "role": "button"
+  },
+  {
+    "name": "Asset Menu",
+    "text": [
+      "Asset Menu",
+      "More options",
+      "More",
+      "Options"
+    ],
+    "role": "button"
+  },
+  {
+    "name": "Delete Asset",
+    "text": [
+      "Delete Asset",
+      "Delete"
+    ],
+    "role": "button"
+  },
+  {
+    "name": "Edit Asset",
+    "text": [
+      "Edit Asset",
+      "Edit File",
+      "Edit"
+    ],
+    "role": "button"
+  },
+  {
+    "name": "Asset Name",
+    "text": [
+      "Asset Name",
+      "File Name",
+      "Name"
+    ],
+    "role": "textbox"
+  },
+  {
+    "name": "Refer to Conversation",
+    "text": [
+      "Refer to Conversation",
+      "View Conversation",
+      "Open Conversation"
+    ],
+    "role": "button"
+  },
+  {
+    "name": "Share",
+    "text": [
+      "Share",
+      "Share Asset"
+    ],
+    "role": "button"
+  },
+  {
+    "name": "Copy Link",
+    "text": [
+      "Copy Link",
+      "Copy share link"
+    ],
+    "role": "button"
+  },
+  {
+    "name": "Profile Card",
+    "text": [
+      "Hello user",
+      "Hello",
+      "Account card"
+    ],
+    "role": "button",
+    "hint": "sidebar"
+  },
+  {
+    "name": "Profile",
+    "text": [
+      "My Profile",
+      "Profile",
+      "Account"
+    ],
+    "role": "button"
+  },
+  {
+    "name": "Buy Booster",
+    "text": [
+      "Buy Booster",
+      "Booster"
+    ],
+    "role": "button"
+  },
+  {
+    "name": "Select Booster",
+    "text": [
+      "Select Booster",
+      "Choose",
+      "Buy Now"
+    ],
+    "role": "button",
+    "screens": [
+      "dashboard",
+      "new-chat",
+      "library",
+      "aistorage",
+      "library-your-uploads"
+    ]
+  },
+  {
+    "name": "Quota & Usage",
+    "text": [
+      "Quota & Usage",
+      "Quota and Usage",
+      "Usage"
+    ],
+    "role": "button"
+  },
+  {
+    "name": "Manage Plan",
+    "text": [
+      "Manage Plans",
+      "Manage Plan",
+      "My Plan"
+    ],
+    "role": "button"
+  },
+  {
+    "name": "Transaction History",
+    "text": [
+      "Transaction History",
+      "Transactions",
+      "Payment History"
+    ],
+    "role": "button"
+  },
+  {
+    "name": "Current Plan",
+    "text": [
+      "Current Plan",
+      "Your Plan",
+      "Active Plan"
+    ],
+    "role": "button"
+  },
+  {
+    "name": "control_panel",
+    "text": [
+      "control_panel"
+    ],
+    "role": "button",
+    "unnamed": true,
+    "hint": "header",
+    "bbox": {
+      "x": 1380,
+      "y": 70.5,
+      "width": 44,
+      "height": 44
+    },
+    "screens": [
+      "library",
+      "library-your-uploads"
+    ]
   },
   {
     "name": "minimize",
@@ -161,231 +629,234 @@
       "y": 16,
       "width": 28,
       "height": 32
-    }
+    },
+    "screens": [
+      "dashboard",
+      "new-chat",
+      "library",
+      "aistorage",
+      "library-your-uploads"
+    ]
   },
   {
-    "name": "Terms & Conditions",
+    "name": "Sahabat-AI",
     "text": [
-      "Terms & Conditions"
+      "Sahabat-AI"
     ],
     "role": "button",
-    "unnamed": false,
-    "hint": "footer"
+    "hint": "sidebar",
+    "source": "scan",
+    "screens": [
+      "dashboard",
+      "new-chat",
+      "library",
+      "aistorage",
+      "library-your-uploads"
+    ]
   },
   {
-    "name": "Storage Usage",
-    "text": ["Storage Usage", "Total Storage", "Storage used", "Used Storage"],
-    "role": "button"
-  },
-  {
-    "name": "Create Project",
-    "text": ["Create Project", "New Project", "Create New"],
-    "role": "button"
-  },
-  {
-    "name": "Project Name",
-    "text": ["Project Name", "Project name", "Project Title", "Enter title", "Title", "Name"],
-    "role": "textbox",
-    "unnamed": true,
-    "bbox": {
-      "x": 659.5,
-      "y": 414,
-      "width": 229,
-      "height": 20
-    }
-  },
-  {
-    "name": "Project Description",
-    "text": ["Project Description", "Description"],
-    "role": "textbox",
-    "unnamed": true,
-    "bbox": {
-      "x": 657.5,
-      "y": 502,
-      "width": 285,
-      "height": 20
-    }
-  },
-  {
-    "name": "Create Project Confirm",
-    "text": ["Create", "Save Project"],
-    "role": "button"
-  },
-  {
-    "name": "Upload Files",
-    "text": ["Upload Files", "Upload File", "Upload", "Add Files"],
-    "role": "button"
-  },
-  {
-    "name": "Add Files Photos",
-    "text": ["Add files & photos", "Add files and photos"],
-    "role": "button"
-  },
-  {
-    "name": "File Menu",
-    "text": ["File Menu", "More"],
+    "name": "Top Up & Pembayaran",
+    "text": [
+      "Top Up & Pembayaran"
+    ],
     "role": "button",
-    "unnamed": true,
-    "bbox": {
-      "x": 963.5,
-      "y": 178,
-      "width": 22,
-      "height": 22
-    }
+    "hint": "sidebar",
+    "source": "scan",
+    "screens": [
+      "dashboard",
+      "new-chat",
+      "library",
+      "aistorage",
+      "library-your-uploads"
+    ]
   },
   {
-    "name": "Close Modal",
-    "text": ["Close", "X"],
+    "name": "Sejarah Indonesia",
+    "text": [
+      "Sejarah Indonesia"
+    ],
     "role": "button",
-    "unnamed": true,
-    "bbox": {
-      "x": 1006.5,
-      "y": 50,
-      "width": 33,
-      "height": 33
-    }
+    "hint": "sidebar",
+    "source": "scan",
+    "screens": [
+      "dashboard",
+      "new-chat",
+      "library",
+      "aistorage",
+      "library-your-uploads"
+    ]
   },
   {
-    "name": "Project Menu",
-    "text": ["Project Menu", "More options", "More"],
+    "name": "Explore Companions",
+    "text": [
+      "Explore Companions"
+    ],
     "role": "button",
-    "unnamed": true,
-    "bbox": {
-      "x": 1259,
-      "y": 107,
-      "width": 28,
-      "height": 28
-    }
+    "source": "scan",
+    "screens": [
+      "dashboard",
+      "new-chat",
+      "library",
+      "aistorage",
+      "library-your-uploads"
+    ]
   },
   {
-    "name": "Favorite",
-    "text": ["Favorite", "Favourite", "Add to Favorite", "Add to Favourite"],
-    "role": "button"
-  },
-  {
-    "name": "Remove Favorite",
-    "text": ["Remove Favorite", "Remove Favourite", "Remove from Favorite", "Remove from Favourite", "Unfavorite"],
-    "role": "button"
-  },
-  {
-    "name": "Ask AI",
-    "text": ["Ask AI", "Chat with File", "Chat"],
-    "role": "button"
-  },
-  {
-    "name": "Delete File",
-    "text": ["Delete File", "Remove File", "Delete"],
-    "role": "button"
-  },
-  {
-    "name": "Delete Project",
-    "text": ["Delete Project", "Remove Project", "Delete"],
-    "role": "button"
-  },
-  {
-    "name": "Confirm Delete",
-    "text": ["Confirm Delete", "Yes, Delete", "Delete"],
-    "role": "button"
-  },
-  {
-    "name": "Edit Project",
-    "text": ["Edit Project", "Edit"],
-    "role": "button"
-  },
-  {
-    "name": "Rename Project",
-    "text": ["Rename Project", "Rename"],
-    "role": "button"
-  },
-  {
-    "name": "Save Changes",
-    "text": ["Save Changes", "Save", "Update"],
-    "role": "button"
-  },
-  {
-    "name": "Library Filter",
-    "text": ["Filter", "Filters"],
-    "role": "button"
-  },
-  {
-    "name": "All Library Items",
-    "text": ["All", "All Items"],
-    "role": "button"
-  },
-  {
-    "name": "Asset Menu",
-    "text": ["Asset Menu", "More options", "More", "Options"],
-    "role": "button"
-  },
-  {
-    "name": "Delete Asset",
-    "text": ["Delete Asset", "Delete"],
-    "role": "button"
-  },
-  {
-    "name": "Edit Asset",
-    "text": ["Edit Asset", "Edit File", "Edit"],
-    "role": "button"
-  },
-  {
-    "name": "Asset Name",
-    "text": ["Asset Name", "File Name", "Name"],
-    "role": "textbox"
-  },
-  {
-    "name": "Refer to Conversation",
-    "text": ["Refer to Conversation", "View Conversation", "Open Conversation"],
-    "role": "button"
-  },
-  {
-    "name": "Share",
-    "text": ["Share", "Share Asset"],
-    "role": "button"
-  },
-  {
-    "name": "Copy Link",
-    "text": ["Copy Link", "Copy share link"],
-    "role": "button"
-  },
-  {
-    "name": "Profile Card",
-    "text": ["Hello user", "Hello", "Account card"],
+    "name": "Simpan File",
+    "text": [
+      "Simpan File"
+    ],
     "role": "button",
-    "hint": "sidebar"
+    "hint": "sidebar",
+    "source": "scan",
+    "screens": [
+      "dashboard",
+      "library-your-uploads"
+    ]
   },
   {
-    "name": "Profile",
-    "text": ["My Profile", "Profile", "Account"],
-    "role": "button"
+    "name": "Say hi",
+    "text": [
+      "Say hi"
+    ],
+    "role": "button",
+    "hint": "sidebar",
+    "source": "scan",
+    "screens": [
+      "dashboard",
+      "new-chat",
+      "library",
+      "aistorage",
+      "library-your-uploads"
+    ]
   },
   {
-    "name": "Buy Booster",
-    "text": ["Buy Booster", "Booster"],
-    "role": "button"
+    "name": "Say hi in one sentence.",
+    "text": [
+      "Say hi in one sentence."
+    ],
+    "role": "button",
+    "hint": "sidebar",
+    "source": "scan",
+    "screens": [
+      "dashboard",
+      "new-chat",
+      "library",
+      "aistorage",
+      "library-your-uploads"
+    ]
   },
   {
-    "name": "Select Booster",
-    "text": ["Select Booster", "Choose", "Buy Now"],
-    "role": "button"
+    "name": "Berita Indonesia",
+    "text": [
+      "Berita Indonesia"
+    ],
+    "role": "button",
+    "hint": "composer",
+    "source": "scan",
+    "screens": [
+      "dashboard",
+      "new-chat"
+    ]
   },
   {
-    "name": "Quota & Usage",
-    "text": ["Quota & Usage", "Quota and Usage", "Usage"],
-    "role": "button"
+    "name": "80s Style",
+    "text": [
+      "80s Style"
+    ],
+    "role": "button",
+    "hint": "composer",
+    "source": "scan",
+    "screens": [
+      "dashboard",
+      "new-chat"
+    ]
   },
   {
-    "name": "Manage Plan",
-    "text": ["Manage Plans", "Manage Plan", "My Plan"],
-    "role": "button"
+    "name": "Buy Phone Credit",
+    "text": [
+      "Buy Phone Credit"
+    ],
+    "role": "button",
+    "hint": "composer",
+    "source": "scan",
+    "screens": [
+      "dashboard",
+      "new-chat"
+    ]
   },
   {
-    "name": "Transaction History",
-    "text": ["Transaction History", "Transactions", "Payment History"],
-    "role": "button"
+    "name": "Zodiac",
+    "text": [
+      "Zodiac"
+    ],
+    "role": "button",
+    "hint": "composer",
+    "source": "scan",
+    "screens": [
+      "dashboard",
+      "new-chat"
+    ]
   },
   {
-    "name": "Current Plan",
-    "text": ["Current Plan", "Your Plan", "Active Plan"],
-    "role": "button"
+    "name": "Pro",
+    "text": [
+      "Pro"
+    ],
+    "role": "button",
+    "hint": "header",
+    "source": "scan",
+    "screens": [
+      "dashboard",
+      "new-chat"
+    ]
+  },
+  {
+    "name": "Privacy Policy.",
+    "text": [
+      "Privacy Policy."
+    ],
+    "role": "button",
+    "hint": "footer",
+    "source": "scan",
+    "screens": [
+      "dashboard",
+      "new-chat"
+    ]
+  },
+  {
+    "name": "Show menu Sort",
+    "text": [
+      "Show menu Sort"
+    ],
+    "role": "button",
+    "hint": "header",
+    "source": "scan",
+    "screens": [
+      "aistorage"
+    ]
+  },
+  {
+    "name": "testing",
+    "text": [
+      "testing"
+    ],
+    "role": "button",
+    "source": "scan",
+    "screens": [
+      "aistorage"
+    ]
+  },
+  {
+    "name": "Buat File CSV Contoh",
+    "text": [
+      "Buat File CSV Contoh"
+    ],
+    "role": "button",
+    "hint": "sidebar",
+    "source": "scan",
+    "screens": [
+      "library-your-uploads"
+    ]
   }
 ]

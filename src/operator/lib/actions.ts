@@ -104,7 +104,7 @@ export const ACTION_META: Record<Action, { label: string; verb: string; hint: st
   waitReply: {
     label: "Wait for reply",
     verb: "Wait for reply",
-    hint: "Waits up to 60s for the chat to answer.",
+    hint: "Waits up to 5 minutes for the chat to answer.",
     family: "wait",
     icon: Hourglass,
   },
