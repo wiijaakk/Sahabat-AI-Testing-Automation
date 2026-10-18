@@ -11,8 +11,11 @@
       "dashboard",
       "new-chat",
       "library",
+      "library-your-uploads",
+      "library-asset-menu",
       "aistorage",
-      "library-your-uploads"
+      "aistorage-project-menu",
+      "aistorage-project"
     ]
   },
   {
@@ -49,8 +52,11 @@
       "dashboard",
       "new-chat",
       "library",
+      "library-your-uploads",
+      "library-asset-menu",
       "aistorage",
-      "library-your-uploads"
+      "aistorage-project-menu",
+      "aistorage-project"
     ]
   },
   {
@@ -73,8 +79,11 @@
       "dashboard",
       "new-chat",
       "library",
+      "library-your-uploads",
+      "library-asset-menu",
       "aistorage",
-      "library-your-uploads"
+      "aistorage-project-menu",
+      "aistorage-project"
     ]
   },
   {
@@ -88,8 +97,11 @@
       "dashboard",
       "new-chat",
       "library",
+      "library-your-uploads",
+      "library-asset-menu",
       "aistorage",
-      "library-your-uploads"
+      "aistorage-project-menu",
+      "aistorage-project"
     ]
   },
   {
@@ -102,8 +114,11 @@
       "dashboard",
       "new-chat",
       "library",
+      "library-your-uploads",
+      "library-asset-menu",
       "aistorage",
-      "library-your-uploads"
+      "aistorage-project-menu",
+      "aistorage-project"
     ]
   },
   {
@@ -141,7 +156,11 @@
     "hint": "composer",
     "screens": [
       "dashboard",
-      "new-chat"
+      "new-chat",
+      "library-asset",
+      "library-asset-menu",
+      "aistorage-project-menu",
+      "aistorage-project"
     ]
   },
   {
@@ -221,7 +240,10 @@
     "hint": "footer",
     "screens": [
       "dashboard",
-      "new-chat"
+      "new-chat",
+      "library-asset-menu",
+      "aistorage-project-menu",
+      "aistorage-project"
     ]
   },
   {
@@ -265,7 +287,8 @@
       "height": 20
     },
     "screens": [
-      "aistorage-create-project"
+      "aistorage-create-project",
+      "aistorage-edit-project"
     ]
   },
   {
@@ -283,7 +306,8 @@
       "height": 20
     },
     "screens": [
-      "aistorage-create-project"
+      "aistorage-create-project",
+      "aistorage-edit-project"
     ]
   },
   {
@@ -300,7 +324,8 @@
       "Upload Files",
       "Upload File",
       "Upload",
-      "Add Files"
+      "Add Files",
+      "Files"
     ],
     "role": "button"
   },
@@ -310,23 +335,11 @@
       "Add files & photos",
       "Add files and photos"
     ],
-    "role": "button"
-  },
-  {
-    "name": "File Menu",
-    "text": [
-      "File Menu",
-      "More"
-    ],
     "role": "button",
-    "unnamed": true,
-    "bbox": {
-      "x": 963.5,
-      "y": 178,
-      "width": 22,
-      "height": 22
-    },
-    "screens": []
+    "screens": [
+      "aistorage-file-menu",
+      "aistorage-upload"
+    ]
   },
   {
     "name": "Close Modal",
@@ -344,6 +357,16 @@
     }
   },
   {
+    "name": "Close Preview",
+    "text": [
+      "Close",
+      "X"
+    ],
+    "role": "button",
+    "unnamed": true,
+    "hint": "header"
+  },
+  {
     "name": "Project Menu",
     "text": [
       "Project Menu",
@@ -357,7 +380,11 @@
       "y": 107,
       "width": 28,
       "height": 28
-    }
+    },
+    "screens": [
+      "aistorage-project-menu",
+      "aistorage-project"
+    ]
   },
   {
     "name": "Favorite",
@@ -367,7 +394,10 @@
       "Add to Favorite",
       "Add to Favourite"
     ],
-    "role": "button"
+    "role": "button",
+    "screens": [
+      "aistorage-project-menu"
+    ]
   },
   {
     "name": "Remove Favorite",
@@ -393,10 +423,20 @@
     "name": "Delete File",
     "text": [
       "Delete File",
-      "Remove File",
-      "Delete"
+      "Delete",
+      "Hapus"
     ],
-    "role": "button"
+    "role": "button",
+    "screens": [
+      "aistorage-upload"
+    ],
+    "unnamed": true,
+    "bbox": {
+      "x": 883,
+      "y": 171,
+      "width": 24,
+      "height": 24
+    }
   },
   {
     "name": "Delete Project",
@@ -405,7 +445,10 @@
       "Remove Project",
       "Delete"
     ],
-    "role": "button"
+    "role": "button",
+    "screens": [
+      "aistorage-project-menu"
+    ]
   },
   {
     "name": "Confirm Delete",
@@ -414,7 +457,10 @@
       "Yes, Delete",
       "Delete"
     ],
-    "role": "button"
+    "role": "button",
+    "screens": [
+      "aistorage-project-menu"
+    ]
   },
   {
     "name": "Edit Project",
@@ -422,7 +468,10 @@
       "Edit Project",
       "Edit"
     ],
-    "role": "button"
+    "role": "button",
+    "screens": [
+      "aistorage-project-menu"
+    ]
   },
   {
     "name": "Rename Project",
@@ -439,7 +488,10 @@
       "Save",
       "Update"
     ],
-    "role": "button"
+    "role": "button",
+    "screens": [
+      "aistorage-edit-project"
+    ]
   },
   {
     "name": "Library Filter",
@@ -473,7 +525,10 @@
       "Delete Asset",
       "Delete"
     ],
-    "role": "button"
+    "role": "button",
+    "screens": [
+      "aistorage-project-menu"
+    ]
   },
   {
     "name": "Edit Asset",
@@ -508,7 +563,11 @@
       "Share",
       "Share Asset"
     ],
-    "role": "button"
+    "role": "button",
+    "screens": [
+      "library-creation",
+      "library-asset"
+    ]
   },
   {
     "name": "Copy Link",
@@ -557,8 +616,11 @@
       "dashboard",
       "new-chat",
       "library",
+      "library-your-uploads",
+      "library-asset-menu",
       "aistorage",
-      "library-your-uploads"
+      "aistorage-project-menu",
+      "aistorage-project"
     ]
   },
   {
@@ -634,8 +696,11 @@
       "dashboard",
       "new-chat",
       "library",
+      "library-your-uploads",
+      "library-asset-menu",
       "aistorage",
-      "library-your-uploads"
+      "aistorage-project-menu",
+      "aistorage-project"
     ]
   },
   {
@@ -650,8 +715,11 @@
       "dashboard",
       "new-chat",
       "library",
+      "library-your-uploads",
+      "library-asset-menu",
       "aistorage",
-      "library-your-uploads"
+      "aistorage-project-menu",
+      "aistorage-project"
     ]
   },
   {
@@ -666,8 +734,11 @@
       "dashboard",
       "new-chat",
       "library",
+      "library-your-uploads",
+      "library-asset-menu",
       "aistorage",
-      "library-your-uploads"
+      "aistorage-project-menu",
+      "aistorage-project"
     ]
   },
   {
@@ -682,8 +753,11 @@
       "dashboard",
       "new-chat",
       "library",
+      "library-your-uploads",
+      "library-asset-menu",
       "aistorage",
-      "library-your-uploads"
+      "aistorage-project-menu",
+      "aistorage-project"
     ]
   },
   {
@@ -697,8 +771,11 @@
       "dashboard",
       "new-chat",
       "library",
+      "library-your-uploads",
+      "library-asset-menu",
       "aistorage",
-      "library-your-uploads"
+      "aistorage-project-menu",
+      "aistorage-project"
     ]
   },
   {
@@ -711,7 +788,13 @@
     "source": "scan",
     "screens": [
       "dashboard",
-      "library-your-uploads"
+      "new-chat",
+      "library",
+      "library-your-uploads",
+      "library-asset-menu",
+      "aistorage",
+      "aistorage-project-menu",
+      "aistorage-project"
     ]
   },
   {
@@ -722,13 +805,7 @@
     "role": "button",
     "hint": "sidebar",
     "source": "scan",
-    "screens": [
-      "dashboard",
-      "new-chat",
-      "library",
-      "aistorage",
-      "library-your-uploads"
-    ]
+    "screens": []
   },
   {
     "name": "Say hi in one sentence.",
@@ -742,8 +819,11 @@
       "dashboard",
       "new-chat",
       "library",
+      "library-your-uploads",
+      "library-asset-menu",
       "aistorage",
-      "library-your-uploads"
+      "aistorage-project-menu",
+      "aistorage-project"
     ]
   },
   {
@@ -808,7 +888,10 @@
     "source": "scan",
     "screens": [
       "dashboard",
-      "new-chat"
+      "new-chat",
+      "library-asset-menu",
+      "aistorage-project-menu",
+      "aistorage-project"
     ]
   },
   {
@@ -821,7 +904,10 @@
     "source": "scan",
     "screens": [
       "dashboard",
-      "new-chat"
+      "new-chat",
+      "library-asset-menu",
+      "aistorage-project-menu",
+      "aistorage-project"
     ]
   },
   {
@@ -856,7 +942,96 @@
     "hint": "sidebar",
     "source": "scan",
     "screens": [
+      "dashboard",
+      "new-chat",
+      "library",
+      "library-your-uploads",
+      "library-asset-menu",
+      "aistorage",
+      "aistorage-project-menu",
+      "aistorage-project"
+    ]
+  },
+  {
+    "name": "SANITY-SCAN-CREATION.csv",
+    "text": [
+      "SANITY-SCAN-CREATION.csv"
+    ],
+    "role": "button",
+    "hint": "sidebar",
+    "source": "scan",
+    "screens": [
+      "library"
+    ]
+  },
+  {
+    "name": "simpan-file.txt",
+    "text": [
+      "simpan-file.txt"
+    ],
+    "role": "button",
+    "source": "scan",
+    "screens": [
+      "library"
+    ]
+  },
+  {
+    "name": "Buat file CSV bernama SANITY_SCAN_CREATION berisi 3 baris contoh.",
+    "text": [
+      "Buat file CSV bernama SANITY_SCAN_CREATION berisi 3 baris contoh."
+    ],
+    "role": "button",
+    "hint": "sidebar",
+    "source": "scan",
+    "screens": [
+      "library-creation"
+    ]
+  },
+  {
+    "name": "SANITY_SCAN_UPLOAD.pdf",
+    "text": [
+      "SANITY_SCAN_UPLOAD.pdf"
+    ],
+    "role": "button",
+    "hint": "sidebar",
+    "source": "scan",
+    "screens": [
       "library-your-uploads"
+    ]
+  },
+  {
+    "name": "Simpan file ini.",
+    "text": [
+      "Simpan file ini."
+    ],
+    "role": "button",
+    "hint": "sidebar",
+    "source": "scan",
+    "screens": [
+      "library-asset"
+    ]
+  },
+  {
+    "name": "SANITY_SCAN_UPLOAD.pdf SANITY_SCAN_UPLOAD.PDF",
+    "text": [
+      "SANITY_SCAN_UPLOAD.pdf SANITY_SCAN_UPLOAD.PDF"
+    ],
+    "role": "button",
+    "hint": "header",
+    "source": "scan",
+    "screens": [
+      "library-asset-menu"
+    ]
+  },
+  {
+    "name": "SANITY_SCAN_PROJECT",
+    "text": [
+      "SANITY_SCAN_PROJECT"
+    ],
+    "role": "button",
+    "source": "scan",
+    "screens": [
+      "aistorage"
     ]
   }
 ]

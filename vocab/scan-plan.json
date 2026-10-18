@@ -200,8 +200,8 @@
     {
       "id": "aistorage-upload",
       "page": "AiStorage",
-      "state": "Add Files sheet",
-      "needs": "A project named {{project}} in AiStorage.",
+      "state": "Project Files sheet",
+      "needs": "A project named {{project}} in AiStorage. On an empty project this is the Upload Files button; once it holds a file it is the \"n Files\" chip.",
       "steps": [
         {
           "action": "tap",
@@ -214,30 +214,6 @@
         {
           "action": "tap",
           "target": "Upload Files"
-        }
-      ]
-    },
-    {
-      "id": "aistorage-file-menu",
-      "page": "AiStorage",
-      "state": "file menu",
-      "needs": "A file named {{projectFile}} uploaded inside the {{project}} project.",
-      "steps": [
-        {
-          "action": "tap",
-          "target": "AIStorage"
-        },
-        {
-          "action": "tapText",
-          "text": "{{project}}"
-        },
-        {
-          "action": "seeText",
-          "text": "{{projectFile}}"
-        },
-        {
-          "action": "tap",
-          "target": "File Menu"
         }
       ]
     }
