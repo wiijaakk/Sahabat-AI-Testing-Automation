@@ -1,24 +1,13 @@
 import { test, expect } from "@playwright/test";
 import { listCases } from "../src/framework/cases.ts";
 
-test("AI Storage, Library, and Profile have all assigned cases", () => {
+test("only the assigned cases are kept", () => {
   const ids = listCases().map((item) => item.id);
-  expect(ids.filter((id) => id.startsWith("as-"))).toHaveLength(9);
-  expect(ids.filter((id) => id.startsWith("lb-"))).toHaveLength(7);
-  expect(ids.filter((id) => id.startsWith("pf-"))).toHaveLength(4);
+  expect(ids).toEqual(["favorite-project", "open-library-assets", "project-chat-summary"]);
 });
 
-test("delete cases only target disposable SANITY data", () => {
-  const deleteIds = ["as-005-delete-file", "as-006-delete-project", "lb-001-delete"];
-  const cases = listCases().filter((item) => deleteIds.includes(item.id));
-  for (const item of cases) {
-    const selected = item.steps.find((step) => step.action === "tapText");
-    expect(selected?.text).toContain("SANITY_");
-  }
-});
-
-test("AS-001 opens the project menu around favorite actions", () => {
-  const item = listCases().find((candidate) => candidate.id === "as-001-favorite");
+test("favorite-project opens the project menu around favorite actions", () => {
+  const item = listCases().find((candidate) => candidate.id === "favorite-project");
   expect(item).toBeTruthy();
 
   const actions = item!.steps.map((step) => `${step.action}:${step.target ?? ""}`);

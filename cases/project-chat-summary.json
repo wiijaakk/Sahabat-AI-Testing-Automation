@@ -1,6 +1,6 @@
 {
-  "id": "as-003-storage-usage",
-  "title": "AS-003 AI Storage usage before and after upload",
+  "id": "project-chat-summary",
+  "title": "AI Storage chat summary and specific topic",
   "steps": [
     {
       "action": "gotoDashboard"
@@ -14,21 +14,13 @@
       "target": "AIStorage"
     },
     {
-      "action": "see",
-      "target": "Storage Usage"
-    },
-    {
-      "action": "checkpoint",
-      "target": "storage-usage-before"
-    },
-    {
       "action": "tap",
       "target": "Create Project"
     },
     {
       "action": "type",
       "target": "Project Name",
-      "text": "testingstorage"
+      "text": "new_aurora"
     },
     {
       "action": "tap",
@@ -36,11 +28,11 @@
     },
     {
       "action": "seeText",
-      "text": "testingstorage"
+      "text": "new_aurora"
     },
     {
       "action": "tapText",
-      "text": "testingstorage"
+      "text": "new_aurora"
     },
     {
       "action": "tap",
@@ -49,11 +41,11 @@
     {
       "action": "upload",
       "target": "Add Files Photos",
-      "text": "test-data/sanity-storage-usage.txt"
+      "text": "test-data/project-aurora.txt"
     },
     {
       "action": "seeText",
-      "text": "sanity-storage-usage"
+      "text": "project-aurora"
     },
     {
       "action": "tap",
@@ -64,23 +56,32 @@
       "text": "Project Files"
     },
     {
-      "action": "gotoDashboard"
+      "action": "type",
+      "target": "composer",
+      "text": "Ringkas isi file ini."
     },
     {
-      "action": "dismiss",
-      "target": "Skip"
+      "action": "press",
+      "key": "Enter"
     },
     {
-      "action": "tap",
-      "target": "AIStorage"
+      "action": "waitReply"
     },
     {
-      "action": "see",
-      "target": "Storage Usage"
+      "action": "type",
+      "target": "composer",
+      "text": "Siapa PIC Project Aurora?"
     },
     {
-      "action": "checkpoint",
-      "target": "storage-usage-after"
+      "action": "press",
+      "key": "Enter"
+    },
+    {
+      "action": "waitReply"
+    },
+    {
+      "action": "seeText",
+      "text": "Rina"
     }
   ]
 }

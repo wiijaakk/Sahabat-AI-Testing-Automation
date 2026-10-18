@@ -1,6 +1,6 @@
 {
-  "id": "as-001-favorite",
-  "title": "AS-001 AI Storage add and remove favorite",
+  "id": "favorite-project",
+  "title": "AI Storage add and remove favorite",
   "steps": [
     {
       "action": "gotoDashboard"

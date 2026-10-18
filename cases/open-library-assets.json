@@ -1,6 +1,6 @@
 {
-  "id": "lb-004-open-assets",
-  "title": "LB-004 Library open AI Creation and check Your Uploads",
+  "id": "open-library-assets",
+  "title": "Library open AI Creation and check Your Uploads",
   "steps": [
     {
       "action": "gotoDashboard"
@@ -19,11 +19,15 @@
     },
     {
       "action": "tapText",
-      "text": "SANITY_AI_CREATION"
+      "text": "SANITY-SCAN-CREATION"
     },
     {
       "action": "checkpoint",
       "target": "ai-creation-open"
+    },
+    {
+      "action": "tap",
+      "target": "Close Preview"
     },
     {
       "action": "tap",

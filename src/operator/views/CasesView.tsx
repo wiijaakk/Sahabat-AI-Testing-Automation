@@ -230,7 +230,7 @@ export function CasesView(props: {
             }}
           >
             <div className="flex gap-1.5">
-              <input className="input input-sm" placeholder="New case id, e.g. lb-007-rename" value={newId} onChange={(e) => setNewId(e.target.value)} />
+              <input className="input input-sm" placeholder="New case id, e.g. rename-upload" value={newId} onChange={(e) => setNewId(e.target.value)} />
               <button type="submit" className="btn btn-sm btn-primary" disabled={!newIdPreview}>
                 <Plus className="size-3.5" />
                 New
