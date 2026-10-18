@@ -176,6 +176,30 @@ app.get("/api/runs/:id", (req, res) => {
   res.json({ job, manifest, shots });
 });
 
+app.delete("/api/runs/:id", (req, res) => {
+  const id = req.params.id;
+  const dir = path.join(runsDir, id);
+  if (!/^\d{8}-\d{6}-[a-z0-9-]+$/.test(id) || !fs.existsSync(dir)) {
+    res.status(404).json({ error: "run not found" });
+    return;
+  }
+  if (current?.id === id && current.status === "running") {
+    res.status(409).json({ error: "This run is still going. Wait for it to finish before deleting it." });
+    return;
+  }
+  fs.rmSync(dir, { recursive: true, force: true });
+  jobs.delete(id);
+  if (current?.id === id) current = null;
+  // keep the latest pointer on a folder that still exists
+  const latest = path.join(runsDir, "latest");
+  if (fs.existsSync(latest) && fs.readFileSync(latest, "utf8").trim() === dir) {
+    const newest = listRuns()[0];
+    if (newest) fs.writeFileSync(latest, newest.dir);
+    else fs.unlinkSync(latest);
+  }
+  res.json({ ok: true });
+});
+
 app.get("/api/catalog", (_req, res) => {
   res.json({ entries: loadVocab() });
 });

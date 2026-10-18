@@ -93,6 +93,21 @@ export function App() {
   const noProfileTitle = needsLogin ? "Sign in to Sahabat-AI first so there is a Chrome profile to run in." : undefined;
   const runCase = (id: string) => post(`/api/run-case/${id}`, "case");
   const current = status?.current ?? null;
+
+  async function deleteRun(id: string) {
+    try {
+      await json(`/api/runs/${id}`, { method: "DELETE" });
+      // land on the run below the deleted one, else the one above
+      const runs = status?.lastRuns ?? [];
+      const at = runs.findIndex((r) => r.id === id);
+      const next = runs[at + 1] ?? runs[at - 1] ?? null;
+      setDetail(null);
+      setSelected(next?.id ?? null);
+      await refresh();
+    } catch (err) {
+      setError(String(err));
+    }
+  }
   const currentLabel = current ? (current.kind === "case" && current.caseId ? current.caseId : current.kind) : null;
 
   function openCurrent() {
@@ -176,6 +191,7 @@ export function App() {
             caseIds={caseIds}
             canRun={!needsLogin && !running && busy === null}
             onRun={runCase}
+            onDelete={deleteRun}
           />
         ) : null}
       </main>

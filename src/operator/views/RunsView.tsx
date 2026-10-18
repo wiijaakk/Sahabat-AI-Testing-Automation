@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronLeft, ChevronRight, CircleAlert, ExternalLink, History, Images, LoaderCircle, Maximize2, Play, X } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, CircleAlert, ExternalLink, History, Images, LoaderCircle, Maximize2, Play, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { EmptyState, PageHeader, SectionTitle, StatusIcon, Summary } from "../components/ui";
@@ -118,6 +118,7 @@ export function RunsView(props: {
   caseIds: string[];
   canRun: boolean;
   onRun: (id: string) => void;
+  onDelete: (id: string) => void;
 }) {
   /** Null until the user toggles the log, so each run starts from its own default. */
   const [showLog, setShowLog] = useState<boolean | null>(null);
@@ -254,17 +255,35 @@ export function RunsView(props: {
                 </div>
               ) : null}
             </div>
-            {caseId ? (
-              <button
-                type="button"
-                className="btn btn-primary"
-                disabled={!props.canRun}
-                title={props.canRun ? `Run ${caseId} again` : "Wait for the current run, or sign in first."}
-                onClick={() => props.onRun(caseId)}
-              >
-                <Play className="size-4" />
-                Run again
-              </button>
+            {props.selected ? (
+              <div className="flex items-center gap-2 shrink-0">
+                {caseId ? (
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    disabled={!props.canRun}
+                    title={props.canRun ? `Run ${caseId} again` : "Wait for the current run, or sign in first."}
+                    onClick={() => props.onRun(caseId)}
+                  >
+                    <Play className="size-4" />
+                    Run again
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  disabled={isLive}
+                  title={isLive ? "Wait for this run to finish before deleting it." : "Delete this run"}
+                  aria-label="Delete this run"
+                  onClick={() => {
+                    const name = selectedRun?.name ?? manifest?.test ?? props.selected;
+                    if (!window.confirm(`Delete the run "${name}" from ${selectedRun?.when ?? props.selected}? Its screenshots and log are removed.`)) return;
+                    props.onDelete(props.selected!);
+                  }}
+                >
+                  <Trash2 className="size-4" />
+                </button>
+              </div>
             ) : null}
           </div>
 
