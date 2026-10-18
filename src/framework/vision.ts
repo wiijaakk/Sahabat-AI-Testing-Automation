@@ -23,7 +23,7 @@ export async function locateWithGemini(
   if (!client) {
     throw new Error(`"${names.join(", ")}" not found (a11y + OCR missed) and GEMINI_API_KEY is empty. Set it in .env`);
   }
-  const model = client.getGenerativeModel({ model: "gemini-2.0-flash" });
+  const model = client.getGenerativeModel({ model: "gemini-3.8-flash" });
   const prompt = `You are locating UI controls on a Flutter web app screenshot.
 Return JSON only: {"hits":[{"name":string,"x":number,"y":number,"width":number,"height":number}]}
 Coordinates are CSS pixels. Image size is ${width}x${height}.
@@ -87,7 +87,7 @@ export async function guessUnnamedIcons(
   if (!client) {
     throw new Error("GEMINI_API_KEY is empty. Set it in reksa/.env");
   }
-  const model = client.getGenerativeModel({ model: "gemini-2.0-flash" });
+  const model = client.getGenerativeModel({ model: "gemini-3.8-flash" });
   const parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [
     {
       text: `You are naming unlabeled Flutter web UI controls on chat.sahabat-ai.com.
